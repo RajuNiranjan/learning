@@ -1,0 +1,17 @@
+@import '../../styles/Responsive.scss';
+
+.home-slider {
+  margin-bottom: 10px;
+
+  @include sm {
+    width: 100%;
+  }
+}
+
+.slider-img {
+  width: 100%;
+
+  @include sm {
+    width: 100%;
+  }
+}

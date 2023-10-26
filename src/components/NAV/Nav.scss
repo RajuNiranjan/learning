@@ -1,0 +1,174 @@
+@import '../../styles/Responsive.scss';
+
+
+.Nav {
+  background: #111;
+  height: 40px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0px;
+  z-index: 9;
+  margin-bottom: 10px;
+  padding: 2rem 6rem;
+
+  @include sm {
+    width: 100%;
+    height: 25px;
+    padding: 25px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+
+  .nav_left {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: #fff;
+    cursor: pointer;
+
+    .nav_left_logo {
+      cursor: pointer;
+      width: 40px;
+
+      @include sm {
+        width: 20px;
+      }
+    }
+
+    .nav_left_logo_text {
+      font-weight: 600;
+      font-size: 24px;
+
+      @include sm {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .nav_center {
+    display: flex;
+    align-items: center;
+    width: 500px;
+    background: #444;
+    border-radius: 50px;
+    height: 30px;
+
+    @include sm {
+      width: 300px;
+      height: 20px;
+    }
+
+
+    .nav_center_search {
+      flex: 3;
+
+      input {
+        width: 100%;
+        background: transparent;
+        outline: 0;
+        border: 0;
+        color: yellow;
+        font-size: 14px;
+        padding: 1px 10px;
+
+        @include sm {
+          font-size: 12px;
+        }
+
+
+      }
+    }
+
+    .nav_center_search_icon {
+      background: yellow;
+      flex: 0.3;
+      border-top-right-radius: 50px;
+      border-bottom-right-radius: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      cursor: pointer;
+
+      @include sm {
+        height: 20px;
+      }
+
+      .nav_center_searchIcon {
+        color: #000;
+        font-size: 22px;
+
+        @include sm {
+          width: 25px;
+          font-size: 16px;
+        }
+
+      }
+    }
+  }
+
+  .nav_right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+
+    .nav_right_icon {
+      color: yellow;
+      font-size: 18px;
+    }
+
+    .nav_right_icons {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      text-transform: capitalize;
+      font-size: 14px;
+      padding: 2px 5px;
+      cursor: pointer;
+      color: #fff;
+
+      @include sm {
+        display: none;
+      }
+
+
+      &:hover {
+        border-radius: 5px;
+        background: yellow;
+        color: #000;
+
+        .nav_right_icon {
+          color: #000;
+        }
+
+        .rotate {
+          rotate: 180deg;
+        }
+      }
+    }
+  }
+}
+
+.account {
+  @include sm {
+    display: none;
+  }
+}
+
+.user_account {
+  position: relative;
+
+
+}
+
+.user_account_dropdown {
+  position: absolute;
+  margin-top: 2px;
+  z-index: 9;
+}

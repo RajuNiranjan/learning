@@ -1,0 +1,14 @@
+$sm: 425px;
+
+
+@mixin sm {
+
+
+  // @media all and (mix-width:($sm)) {
+  //   @content;
+  // }
+
+  @media all and (max-width:($sm)) {
+    @content;
+  }
+}

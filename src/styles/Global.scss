@@ -1,0 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap");
+@import '../styles/Responsive.scss';
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+
+  a {
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+body {
+  background: #202125;
+  overflow-x: hidden;
+
+}
+
+.App {
+
+
+  @include sm {
+    width: 100%;
+    overflow: hidden;
+  }
+}
