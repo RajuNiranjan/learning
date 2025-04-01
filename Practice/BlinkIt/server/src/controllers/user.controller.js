@@ -124,3 +124,30 @@ export const login = async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+export const logout = async (req, res) => {
+  try {
+    const { userId } = req;
+
+    const cookiesOption = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    };
+
+    res.clearCookie("accessToken", cookiesOption);
+    res.clearCookie("refreshToken", cookiesOption);
+
+    const removeRefreshToken = await UserModel.updateOne(
+      { _id: userId },
+      { $set: { refresh_token: "" } }
+    );
+
+    return res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
