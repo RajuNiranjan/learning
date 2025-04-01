@@ -5,6 +5,7 @@ import { verifyEmailTemplate } from "../utils/verifyEmailTemplate.js";
 import { ENV_VARIABLES } from "../utils/env.js";
 import { generateAccessToken } from "../utils/generateAccessToken.js";
 import { generateRefreshToken } from "../utils/generateRefreshToken.js";
+import { cloudinaryAvatarUploader } from "../utils/cloudinaryAvatartUploader.js";
 
 export const register = async (req, res) => {
   try {
@@ -128,7 +129,6 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const { userId } = req;
-
     const cookiesOption = {
       httpOnly: true,
       secure: true,
@@ -144,6 +144,31 @@ export const logout = async (req, res) => {
     );
 
     return res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+export const uploadAvatar = async (req, res) => {
+  try {
+    const { file, userId } = req;
+
+    if (!file) {
+      return res.status(400).json({ message: "Image is required" });
+    }
+
+    const avatarUrl = await cloudinaryAvatarUploader(file);
+
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { $set: { avatar: avatarUrl } },
+      { new: true }
+    );
+
+    return res.status(200).json({ message: "Avatar uploaded successfully" });
   } catch (error) {
     console.log(error);
     return res
