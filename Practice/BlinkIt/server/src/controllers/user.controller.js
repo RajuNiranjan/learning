@@ -297,3 +297,93 @@ export const verifyForgetPasswordOtp = async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (!email || !password || !confirmPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (password !== confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "Password and confirm password do not match" });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const hashPassword = await bcrypt.hash(password, salt);
+
+    const update = await UserModel.updateOne(
+      { _id: user._id },
+      { $set: { password: hashPassword } }
+    );
+
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const refreshToken =
+      req.cookies.refreshToken || req?.headers?.authrozation?.split(" ")[1];
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(refreshToken, ENV_VARIABLES.JWT_SECRET);
+
+    if (!decoded) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const userId = decoded._id;
+    const newAccessToken = await generateAccessToken(userId);
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    };
+
+    res.cookie("accessToken", newAccessToken, cookieOptions);
+
+    return res.status(200).json({ message: "Token refreshed successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+export const getUser = async (req, res) => {
+  try {
+    const { userId } = req;
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
