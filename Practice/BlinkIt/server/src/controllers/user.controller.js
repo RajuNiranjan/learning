@@ -176,3 +176,43 @@ export const uploadAvatar = async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+export const updateUser = async (req, res) => {
+  try {
+    const { userId, file } = req;
+
+    const { name, email, mobile, password } = req.body;
+
+    let hashPassword;
+    if (password) {
+      const salt = await bcrypt.genSalt(12);
+      hashPassword = await bcrypt.hash(password, salt);
+    }
+
+    let avatarUrl;
+    if (file) {
+      avatarUrl = await cloudinaryAvatarUploader(file);
+    }
+
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(mobile && { mobile }),
+        ...(password && { password: hashPassword }),
+        ...(avatarUrl && { avatar: avatarUrl }),
+      },
+      {
+        new: true,
+      }
+    );
+
+    return res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
