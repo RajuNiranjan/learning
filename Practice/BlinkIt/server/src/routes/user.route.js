@@ -7,6 +7,7 @@ import {
   uploadAvatar,
   updateUser,
   forgetPassword,
+  verifyForgetPasswordOtp,
 } from "../controllers/user.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.js";
@@ -24,3 +25,4 @@ userRouter.put(
 );
 userRouter.put("/update-user", authMiddleware, updateUser);
 userRouter.post("/forget-password", forgetPassword);
+userRouter.post("/verify-forget-password-otp", verifyForgetPasswordOtp);

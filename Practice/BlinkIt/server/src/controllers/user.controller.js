@@ -260,3 +260,40 @@ export const forgetPassword = async (req, res) => {
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+export const verifyForgetPasswordOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const currentTime = new Date().toISOString();
+
+    if (user.forgot_password_expiry < currentTime) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    if (user.forgot_password_otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    await UserModel.updateOne(
+      { _id: user._id },
+      { $set: { forgot_password_otp: null, forgot_password_expiry: null } }
+    );
+
+    return res.status(200).json({ message: "OTP verified successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
