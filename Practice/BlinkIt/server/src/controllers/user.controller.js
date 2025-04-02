@@ -6,6 +6,8 @@ import { ENV_VARIABLES } from "../utils/env.js";
 import { generateAccessToken } from "../utils/generateAccessToken.js";
 import { generateRefreshToken } from "../utils/generateRefreshToken.js";
 import { cloudinaryAvatarUploader } from "../utils/cloudinaryAvatartUploader.js";
+import { generateOtp } from "../utils/generateOtp.js";
+import { forgetPasswordTemplate } from "../utils/forgetPasswordTemplate.js";
 
 export const register = async (req, res) => {
   try {
@@ -209,6 +211,48 @@ export const updateUser = async (req, res) => {
     );
 
     return res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+export const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const otp = generateOtp();
+
+    const expiresIn = new Date() + 60 * 60 * 1000;
+
+    await UserModel.updateOne(
+      { _id: user._id },
+      { $set: { forgot_password_otp: otp, forgot_password_expiry: expiresIn } }
+    );
+
+    await UserModel.findByIdAndUpdate(user._id, {
+      forgot_password_otp: otp,
+      forgot_password_expiry: expiresIn,
+    });
+
+    await sendEmail({
+      to: email,
+      subject: "Forget Password OTP",
+      html: forgetPasswordTemplate(otp),
+    });
+
+    return res.status(200).json({ message: "OTP sent to email" });
   } catch (error) {
     console.log(error);
     return res
