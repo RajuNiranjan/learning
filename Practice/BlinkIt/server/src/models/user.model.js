@@ -64,7 +64,7 @@ const userSchema = new Schema(
     },
     forgot_password_expiry: {
       type: Date,
-      default: "",
+      default: null,
     },
     role: {
       type: String,
