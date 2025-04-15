@@ -10,23 +10,21 @@ const app = express();
 const PORT = 5000;
 
 app.use(cors());
+app.use(express.json());
 
 // Add rate limiting to prevent overwhelming the OpenStreetMap servers
-const RATE_LIMIT_MS = 250; // 250ms between requests
+const RATE_LIMIT_MS = 250;
 let lastRequestTime = Date.now();
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function downloadTile(z, x, y) {
-  // Convert numbers to strings for path creation
   const tilePath = path.join(__dirname, 'tiles', String(z), String(x), `${String(y)}.png`);
 
-  // Return existing tile if available
   if (fs.existsSync(tilePath)) {
     return { status: 'cached', path: tilePath };
   }
 
-  // Rate limiting
   const now = Date.now();
   const timeSinceLastRequest = now - lastRequestTime;
   if (timeSinceLastRequest < RATE_LIMIT_MS) {
@@ -41,8 +39,6 @@ async function downloadTile(z, x, y) {
     if (!response.ok) throw new Error('Failed to fetch tile');
 
     const buffer = await response.buffer();
-
-    // Save tile to disk
     fs.mkdirSync(path.dirname(tilePath), { recursive: true });
     fs.writeFileSync(tilePath, buffer);
 
@@ -52,13 +48,23 @@ async function downloadTile(z, x, y) {
   }
 }
 
-// Single tile endpoint
+// Regular tile display endpoint
 app.get('/tiles/:z/:x/:y.png', async (req, res) => {
   const { z, x, y } = req.params;
-  
+  const tilePath = path.join(__dirname, 'tiles', String(z), String(x), `${String(y)}.png`);
+
+  if (fs.existsSync(tilePath)) {
+    return res.sendFile(tilePath);
+  }
+
   try {
-    const result = await downloadTile(z, x, y);
-    res.sendFile(result.path);
+    const tileUrl = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+    const response = await fetch(tileUrl);
+    if (!response.ok) throw new Error('Failed to fetch tile');
+
+    const buffer = await response.buffer();
+    res.setHeader('Content-Type', 'image/png');
+    res.send(buffer);
   } catch (err) {
     console.error('Tile fetch error:', err);
     res.status(500).send('Tile fetch failed');
@@ -66,7 +72,7 @@ app.get('/tiles/:z/:x/:y.png', async (req, res) => {
 });
 
 // Batch download endpoint
-app.post('/tiles/batch', express.json(), async (req, res) => {
+app.post('/tiles/batch', async (req, res) => {
   const { tiles } = req.body;
   
   if (!Array.isArray(tiles)) {
@@ -88,18 +94,6 @@ app.post('/tiles/batch', express.json(), async (req, res) => {
   }
 
   res.json(results);
-});
-
-// Get tile status endpoint
-app.get('/tiles/status/:z/:x/:y', (req, res) => {
-  const { z, x, y } = req.params;
-  const tilePath = path.join(__dirname, 'tiles', z, x, `${y}.png`);
-  
-  if (fs.existsSync(tilePath)) {
-    res.json({ status: 'exists', path: tilePath });
-  } else {
-    res.json({ status: 'not_found' });
-  }
 });
 
 app.listen(PORT, () => {

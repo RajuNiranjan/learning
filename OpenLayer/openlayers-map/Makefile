@@ -1,4 +1,4 @@
-.PHONY: install i dev client server 
+.PHONY: install i dev client server clean
 
 i | install:
 	cd server && npm install
@@ -19,3 +19,6 @@ build:
 
 start:
 	cd server && npm run start
+
+clean:
+	rm -rf server/src/tiles

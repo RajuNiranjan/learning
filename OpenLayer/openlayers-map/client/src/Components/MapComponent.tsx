@@ -75,16 +75,13 @@
 
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
-import { fromLonLat } from "ol/proj";
+import { fromLonLat, transformExtent } from "ol/proj";
 import { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import Draw, { createBox } from "ol/interaction/Draw";
 import VectorLayer from "ol/layer/Vector";
-// import OSM from "ol/source/OSM";
 import VectorSource from "ol/source/Vector";
-// import { SimpleGeometry } from "ol/geom";
 import { XYZ } from "ol/source";
-import { transformExtent } from "ol/proj";
 import { Extent } from "ol/extent";
 
 export const MapComponent = () => {
@@ -97,43 +94,13 @@ export const MapComponent = () => {
     new VectorLayer({ source: vectorSource.current })
   );
 
-  useEffect(() => {
-    if (mapRef.current) {
-      const initializedMap = new Map({
-        target: mapRef.current,
-        layers: [
-          new TileLayer({
-            source: new XYZ({
-              url: "http://localhost:5000/tiles/{z}/{x}/{y}.png", // backend tile route
-              crossOrigin: "anonymous",
-            }),
-          }),
-          vectorLayer.current,
-        ],
-        view: new View({
-          center: fromLonLat([0, 0]),
-          zoom: 2,
-          projection: "EPSG:3857",
-        }),
-      });
-
-      setMap(initializedMap);
-
-      return () => {
-        initializedMap.setTarget(undefined);
-      };
-    }
-  }, []);
-
   const downloadTilesInRegion = async (extent: Extent, zoom: number) => {
-    // Transform coordinates from EPSG:3857 to EPSG:4326 (lat/lon)
     const [minX, minY, maxX, maxY] = transformExtent(
       extent,
       "EPSG:3857",
       "EPSG:4326"
     );
 
-    // Convert bounds to tile coordinates
     const getTileCoords = (lon: number, lat: number, z: number) => {
       const x = Math.floor(((lon + 180) / 360) * Math.pow(2, z));
       const y = Math.floor(
@@ -152,7 +119,6 @@ export const MapComponent = () => {
     const [minTileX, minTileY] = getTileCoords(minX, maxY, zoom);
     const [maxTileX, maxTileY] = getTileCoords(maxX, minY, zoom);
 
-    // Prepare batch request
     const tiles = [];
     for (let x = minTileX; x <= maxTileX; x++) {
       for (let y = minTileY; y <= maxTileY; y++) {
@@ -175,8 +141,6 @@ export const MapComponent = () => {
 
       const results = await response.json();
       console.log("Download results:", results);
-
-      // Log statistics
       console.log(`Successfully downloaded: ${results.success.length} tiles`);
       console.log(`Failed downloads: ${results.failed.length} tiles`);
 
@@ -187,6 +151,34 @@ export const MapComponent = () => {
       console.error("Error downloading tiles:", error);
     }
   };
+
+  useEffect(() => {
+    if (mapRef.current) {
+      const initializedMap = new Map({
+        target: mapRef.current,
+        layers: [
+          new TileLayer({
+            source: new XYZ({
+              url: "http://localhost:5000/tiles/{z}/{x}/{y}.png",
+              crossOrigin: "anonymous",
+            }),
+          }),
+          vectorLayer.current,
+        ],
+        view: new View({
+          center: fromLonLat([0, 0]),
+          zoom: 2,
+          projection: "EPSG:3857",
+        }),
+      });
+
+      setMap(initializedMap);
+
+      return () => {
+        initializedMap.setTarget(undefined);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (!map) return;
@@ -209,9 +201,9 @@ export const MapComponent = () => {
       const geometry = feature.getGeometry();
       if (geometry) {
         const extent = geometry.getExtent();
-        const zoom = map.getView().getZoom() || 2;
+        const zoom = Math.floor(map.getView().getZoom() || 2);
         console.log("Downloading tiles for extent:", extent);
-        downloadTilesInRegion(extent, Math.floor(zoom));
+        downloadTilesInRegion(extent, zoom);
       }
     });
 
@@ -219,24 +211,5 @@ export const MapComponent = () => {
     setDraw(newDraw);
   }, [map]);
 
-  // const handleUndo = () => {
-  //   if (draw) {
-  //     draw.removeLastPoint();
-  //   }
-  // };
-
-  return (
-    <>
-      <div ref={mapRef} className="h-screen w-screen" />
-      {/* <div className="row mt-3 absolute top-96 left-0">
-        <div className="col-auto">
-          <div className="input-group">
-            <button className="btn btn-outline-secondary" onClick={handleUndo}>
-              Undo
-            </button>
-          </div>
-        </div>
-      </div> */}
-    </>
-  );
+  return <div ref={mapRef} className="h-screen w-screen" />;
 };
