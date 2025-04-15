@@ -83,18 +83,36 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { XYZ } from "ol/source";
 import { Extent } from "ol/extent";
+import { CustomDialog } from "../ui-components/CustomeDialog";
+
+interface Tile {
+  z: number;
+  x: number;
+  y: number;
+  priority?: number;
+}
+
+interface DownloadResults {
+  success: Tile[];
+  failed: Tile[];
+}
 
 export const MapComponent = () => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [map, setMap] = useState<Map | null>(null);
   const [draw, setDraw] = useState<Draw | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const vectorSource = useRef<VectorSource>(new VectorSource({ wrapX: false }));
   const vectorLayer = useRef<VectorLayer>(
     new VectorLayer({ source: vectorSource.current })
   );
 
-  const downloadTilesInRegion = async (extent: Extent, zoom: number) => {
+  const downloadTilesInRegion = async (extent: Extent, currentZoom: number) => {
+    const MIN_ALLOWED_ZOOM = 10;
+    const MAX_ALLOWED_ZOOM = 19;
+    const CHUNK_SIZE = 100;
+
     const [minX, minY, maxX, maxY] = transformExtent(
       extent,
       "EPSG:3857",
@@ -116,39 +134,94 @@ export const MapComponent = () => {
       return [x, y];
     };
 
-    const [minTileX, minTileY] = getTileCoords(minX, maxY, zoom);
-    const [maxTileX, maxTileY] = getTileCoords(maxX, minY, zoom);
+    const allTiles = [];
+    const zoomLevels = [
+      currentZoom,
+      ...Array.from(
+        { length: MAX_ALLOWED_ZOOM - MIN_ALLOWED_ZOOM + 1 },
+        (_, i) => MIN_ALLOWED_ZOOM + i
+      ).filter((z) => z !== currentZoom),
+    ];
 
-    const tiles = [];
-    for (let x = minTileX; x <= maxTileX; x++) {
-      for (let y = minTileY; y <= maxTileY; y++) {
-        tiles.push({ z: zoom, x, y });
+    for (const zoom of zoomLevels) {
+      const [minTileX, minTileY] = getTileCoords(minX, maxY, zoom);
+      const [maxTileX, maxTileY] = getTileCoords(maxX, minY, zoom);
+
+      const tilesCount = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
+      console.log(`Processing zoom level ${zoom}: ${tilesCount} tiles`);
+
+      if (tilesCount > 3000) {
+        console.warn(
+          `Warning: Large number of tiles (${tilesCount}) at zoom level ${zoom}`
+        );
+      }
+
+      for (let x = minTileX; x <= maxTileX; x++) {
+        for (let y = minTileY; y <= maxTileY; y++) {
+          allTiles.push({
+            z: zoom,
+            x,
+            y,
+            priority: zoom === currentZoom ? 1 : 2,
+          });
+        }
       }
     }
 
-    try {
-      const response = await fetch("http://localhost:5000/tiles/batch", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ tiles }),
-      });
+    // Sort tiles by priority
+    allTiles.sort((a, b) => a.priority - b.priority);
 
-      if (!response.ok) {
-        throw new Error("Batch download failed");
+    console.log(
+      `Preparing to download ${allTiles.length} tiles across zoom levels ${MIN_ALLOWED_ZOOM}-${MAX_ALLOWED_ZOOM}`
+    );
+
+    // Process tiles in chunks
+    const chunks = [];
+    for (let i = 0; i < allTiles.length; i += CHUNK_SIZE) {
+      chunks.push(allTiles.slice(i, i + CHUNK_SIZE));
+    }
+
+    const results: DownloadResults = {
+      success: [],
+      failed: [],
+    };
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      console.log(
+        `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} tiles)`
+      );
+
+      try {
+        const response = await fetch("http://localhost:5000/tiles/batch", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ tiles: chunk }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Batch download failed for chunk ${i + 1}`);
+        }
+
+        const chunkResults: DownloadResults = await response.json();
+        results.success.push(...chunkResults.success);
+        results.failed.push(...chunkResults.failed);
+      } catch (error) {
+        console.error(`Error downloading chunk ${i + 1}:`, error);
+        results.failed.push(...chunk);
       }
 
-      const results = await response.json();
-      console.log("Download results:", results);
-      console.log(`Successfully downloaded: ${results.success.length} tiles`);
-      console.log(`Failed downloads: ${results.failed.length} tiles`);
+      // Add a small delay between chunks
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
-      if (results.failed.length > 0) {
-        console.warn("Failed tiles:", results.failed);
-      }
-    } catch (error) {
-      console.error("Error downloading tiles:", error);
+    console.log(
+      `Download complete. Success: ${results.success.length}, Failed: ${results.failed.length}`
+    );
+    if (results.failed.length > 0) {
+      console.warn("Failed tiles:", results.failed);
     }
   };
 
@@ -166,8 +239,8 @@ export const MapComponent = () => {
           vectorLayer.current,
         ],
         view: new View({
-          center: fromLonLat([0, 0]),
-          zoom: 2,
+          center: fromLonLat([80.431829, 16.31751]),
+          zoom: 10,
           projection: "EPSG:3857",
         }),
       });
@@ -200,10 +273,7 @@ export const MapComponent = () => {
       const feature = event.feature;
       const geometry = feature.getGeometry();
       if (geometry) {
-        const extent = geometry.getExtent();
-        const zoom = Math.floor(map.getView().getZoom() || 2);
-        console.log("Downloading tiles for extent:", extent);
-        downloadTilesInRegion(extent, zoom);
+        setIsDialogOpen(true);
       }
     });
 
@@ -211,5 +281,43 @@ export const MapComponent = () => {
     setDraw(newDraw);
   }, [map]);
 
-  return <div ref={mapRef} className="h-screen w-screen" />;
+  const handleDownload = () => {
+    const features = vectorSource.current.getFeatures();
+    if (features.length > 0) {
+      const geometry = features[0].getGeometry();
+      if (geometry) {
+        const extent = geometry.getExtent();
+        const currentZoom = Math.round(map?.getView().getZoom() || 0);
+        downloadTilesInRegion(extent, currentZoom);
+      }
+    }
+    setIsDialogOpen(false);
+  };
+
+  const handleCancel = () => {
+    vectorSource.current.clear();
+    setIsDialogOpen(false);
+  };
+
+  return (
+    <>
+      <div ref={mapRef} className="h-screen w-screen" />
+      <CustomDialog isOpen={isDialogOpen} onClose={handleCancel}>
+        <div className="w-96 h-14 absolute -top-52 left-0">
+          <button
+            onClick={handleCancel}
+            className="w-1/2 h-full bg-yellow-500 text-yellow-700 cursor-pointer rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDownload}
+            className="w-1/2 h-full text-lime-700 bg-lime-500 cursor-pointer rounded-lg"
+          >
+            Download tiles
+          </button>
+        </div>
+      </CustomDialog>
+    </>
+  );
 };

@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Add rate limiting to prevent overwhelming the OpenStreetMap servers
 const RATE_LIMIT_MS = 250;
-let lastRequestTime = Date.now();
+let lastRequestTime = 0;
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -76,7 +76,7 @@ app.post('/tiles/batch', async (req, res) => {
   const { tiles } = req.body;
   
   if (!Array.isArray(tiles)) {
-    return res.status(400).send('Invalid request format');
+    return res.status(400).json({ error: 'Invalid request format' });
   }
 
   const results = {
@@ -84,12 +84,14 @@ app.post('/tiles/batch', async (req, res) => {
     failed: []
   };
 
-  for (const { z, x, y } of tiles) {
+  for (const tile of tiles) {
     try {
+      const { z, x, y } = tile;
       const result = await downloadTile(z, x, y);
-      results.success.push({ z, x, y, status: result.status });
-    } catch (err) {
-      results.failed.push({ z, x, y, error: err.message });
+      results.success.push({ ...tile, status: result.status });
+    } catch (error) {
+      console.error(`Failed to download tile:`, tile, error);
+      results.failed.push(tile);
     }
   }
 
