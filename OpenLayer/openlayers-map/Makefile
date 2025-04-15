@@ -16,7 +16,6 @@ api/dev:
 
 build:
 	cd client && npm run build
-	cd server && npm run build
 
 start:
 	cd server && npm run start
