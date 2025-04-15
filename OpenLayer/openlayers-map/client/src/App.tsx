@@ -1,10 +1,12 @@
-import { MapComponent } from "./Components/MapComponent";
+import { Outlet } from "react-router-dom";
+import { NavBar } from "./Components/NavBar";
 
 const App = () => {
   return (
-    <div>
-      <MapComponent />
-    </div>
+    <>
+      <NavBar />
+      <Outlet />
+    </>
   );
 };
 
