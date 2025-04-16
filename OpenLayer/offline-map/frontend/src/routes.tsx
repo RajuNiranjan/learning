@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
-import App from "./App";
-import DefaultMapScreen from "./pages/DefaultMap.page";
+import { App } from "./App";
+import DefaultMapScreen from "./screens/Defaultmap/DefaultMap.screen";
 
 export const router = createBrowserRouter([
   {
@@ -8,7 +8,7 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "",
+        path: "/",
         element: <DefaultMapScreen />,
       },
     ],

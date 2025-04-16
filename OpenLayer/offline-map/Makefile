@@ -1,21 +1,11 @@
-.PHONY: install i app api clean
+.PHONY: install app
 
-install i: 
-	cd app && npm install
-	cd api && npm install
+install i:
+	cd frontend && npm install
 
 app/dev:
-	cd app && npm run dev
+	cd frontend && npm run dev
 
-api/dev:
-	cd api && npm run dev
+app/build:
+	cd frontend && npm run build
 
-clean:
-	rm -rf app/node_modules
-	rm -rf api/node_modules
-	cd app && npm install
-	cd server && npm install
-
-dev:
-	cd app && npm run dev
-	cd server && npm run dev
