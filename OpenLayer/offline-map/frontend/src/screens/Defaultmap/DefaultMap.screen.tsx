@@ -10,7 +10,7 @@ import Draw, { createBox } from "ol/interaction/Draw";
 import { DrawOption } from "./compoents/DrawOption";
 import { Polygon } from "ol/geom";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
-import { TailDownlodOptionCard } from "./compoents/TailDownlodOptionCard";
+import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
 
 type Coordinates = {
   lat: number;
@@ -119,7 +119,7 @@ const DefaultMapScreen = () => {
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
-        <TailDownlodOptionCard />
+        <TileDownlodOptionCard />
       </CustomDialog>
     </div>
   );
