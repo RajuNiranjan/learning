@@ -1,7 +1,7 @@
 import { Feature, Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat, Projection, toLonLat } from "ol/proj";
 import { OSM } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { useEffect, useRef, useState } from "react";
@@ -45,6 +45,10 @@ const DefaultMapScreen = () => {
   if (error) {
     console.log(error);
   }
+  const projection = new Projection({
+    code: "EPSG:3857",
+    units: "m",
+  });
 
   const [formData, setFormData] = useState<FormData>({
     folderName: "",
@@ -54,6 +58,10 @@ const DefaultMapScreen = () => {
     maxLat: 0,
   });
 
+  /**
+   * Handling to close the dialog
+   * @returns void
+   */
   const handleDialogClose = () => {
     if (!isDownloading) {
       setIsDownloadTileDialogOpen(false);
@@ -64,6 +72,11 @@ const DefaultMapScreen = () => {
     }
   };
 
+  /**
+   * Handling to submit the form
+   * @param data - Form data
+   * @returns void
+   */
   const handleDownloadTileFormSubmit = async (data: FormData) => {
     const { folderName, minLon, minLat, maxLon, maxLat } = data;
 
@@ -88,6 +101,9 @@ const DefaultMapScreen = () => {
     }
   };
 
+  /**
+   * Handling to initialize the map
+   */
   useEffect(() => {
     let map: Map | undefined;
     const raster = new TileLayer({
@@ -105,6 +121,7 @@ const DefaultMapScreen = () => {
         view: new View({
           center: fromLonLat([80.4365, 16.3067]),
           zoom: 12,
+          projection,
         }),
       });
 
@@ -118,6 +135,11 @@ const DefaultMapScreen = () => {
 
       setDrawInteraction(draw);
 
+      /**
+       * Handling to draw the shape
+       * @param e - Draw event
+       * @returns void
+       */
       draw.on("drawend", (e) => {
         const feature = e.feature;
         const geometry = feature?.getGeometry();
@@ -139,6 +161,11 @@ const DefaultMapScreen = () => {
         }
       });
 
+      /**
+       * Handling to get the coordinates
+       * @param e - Pointer move event
+       * @returns void
+       */
       map.on("pointermove", (e) => {
         const coordinates = toLonLat(e.coordinate);
         setCoordinates({
@@ -155,6 +182,10 @@ const DefaultMapScreen = () => {
     };
   }, []);
 
+  /**
+   * Handling to toggle the draw shape
+   * @returns void
+   */
   const toggleDrawShape = () => {
     if (mapInstanceRef.current && drawInteraction) {
       if (isDrawShape) {
@@ -165,6 +196,10 @@ const DefaultMapScreen = () => {
     }
   };
 
+  /**
+   * Handling to toggle the draw shape
+   * @returns void
+   */
   useEffect(() => {
     toggleDrawShape();
   }, [isDrawShape]);
