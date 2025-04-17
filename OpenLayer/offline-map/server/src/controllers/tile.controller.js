@@ -36,3 +36,12 @@ export const downloadTiles = async (req, res) => {
     }
 }
 
+export const mapData = async (req, res) => {
+ try {
+    console.log(req.body);
+    res.status(200).json({ message: "Map data fetched successfully" })
+ } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+ }
+}

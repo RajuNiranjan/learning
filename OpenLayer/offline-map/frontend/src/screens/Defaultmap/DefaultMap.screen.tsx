@@ -83,7 +83,7 @@ const DefaultMapScreen = () => {
     try {
       setIsDownloading(true);
       setError(null);
-      const res = await axiosInstance.post("/api/v1/tile/download-tiles", {
+      const tileRes = await axiosInstance.post("/api/v1/tile/download-tiles", {
         folderName,
         minLon,
         minLat,
@@ -91,7 +91,21 @@ const DefaultMapScreen = () => {
         maxLat,
       });
 
-      console.log("res", res);
+      const extent = [minLon, minLat, maxLon, maxLat];
+      const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
+
+      const mapDataRes = await axiosInstance.post(`/api/v1/tile/map-data`, {
+        name: folderName,
+        extent,
+        center,
+        projection: projection.getCode(),
+        minZoom: 10,
+        maxZoom: 12,
+        thumbnailImage: "",
+      });
+
+      console.log("tileRes", tileRes);
+      console.log("mapDataRes", mapDataRes);
     } catch (error) {
       console.error("Error downloading tile:", error);
       setError("Error downloading tile");
