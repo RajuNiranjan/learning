@@ -11,10 +11,19 @@ import { DrawOption } from "./compoents/DrawOption";
 import { Polygon } from "ol/geom";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
 import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
+import { axiosInstance } from "../../utils/axiosInstance";
 
 type Coordinates = {
   lat: number;
   lon: number;
+};
+
+export type FormData = {
+  folderName: string;
+  minLon: number;
+  minLat: number;
+  maxLon: number;
+  maxLat: number;
 };
 
 const DefaultMapScreen = () => {
@@ -30,12 +39,52 @@ const DefaultMapScreen = () => {
     lat: 0,
     lon: 0,
   });
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (error) {
+    console.log(error);
+  }
+
+  const [formData, setFormData] = useState<FormData>({
+    folderName: "",
+    minLon: 0,
+    minLat: 0,
+    maxLon: 0,
+    maxLat: 0,
+  });
 
   const handleDialogClose = () => {
-    setIsDownloadTileDialogOpen(false);
-    if (currentFeature) {
-      vectorSourceRef.current.removeFeature(currentFeature);
-      setCurrentFeature(null);
+    if (!isDownloading) {
+      setIsDownloadTileDialogOpen(false);
+      if (currentFeature) {
+        vectorSourceRef.current.removeFeature(currentFeature);
+        setCurrentFeature(null);
+      }
+    }
+  };
+
+  const handleDownloadTileFormSubmit = async (data: FormData) => {
+    const { folderName, minLon, minLat, maxLon, maxLat } = data;
+
+    try {
+      setIsDownloading(true);
+      setError(null);
+      const res = await axiosInstance.post("/api/v1/tile/download-tiles", {
+        folderName,
+        minLon,
+        minLat,
+        maxLon,
+        maxLat,
+      });
+
+      console.log("res", res);
+    } catch (error) {
+      console.error("Error downloading tile:", error);
+      setError("Error downloading tile");
+    } finally {
+      setIsDownloading(false);
+      handleDialogClose();
     }
   };
 
@@ -73,10 +122,20 @@ const DefaultMapScreen = () => {
         const feature = e.feature;
         const geometry = feature?.getGeometry();
         if (geometry instanceof Polygon) {
-          const coordinates = geometry.getCoordinates();
-          console.log(coordinates);
+          const extent = geometry.getExtent();
+          const [minX, minY, maxX, maxY] = extent;
+          const [minLon, minLat] = toLonLat([minX, minY]);
+          const [maxLon, maxLat] = toLonLat([maxX, maxY]);
+
           setCurrentFeature(feature);
           setIsDownloadTileDialogOpen(true);
+          setFormData({
+            folderName: "",
+            minLon,
+            minLat,
+            maxLon,
+            maxLat,
+          });
         }
       });
 
@@ -119,7 +178,12 @@ const DefaultMapScreen = () => {
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
-        <TileDownlodOptionCard />
+        <TileDownlodOptionCard
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleDownloadTileFormSubmit}
+          isDownloading={isDownloading}
+        />
       </CustomDialog>
     </div>
   );

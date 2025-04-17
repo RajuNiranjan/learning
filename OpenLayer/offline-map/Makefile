@@ -16,3 +16,6 @@ dev:
 	cd server && npm run dev & \
 	cd frontend && npm run dev & \
 	wait
+
+clean:
+	rm -rf cd server/tiles/*
