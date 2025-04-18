@@ -84,32 +84,19 @@ const DefaultMapScreen = () => {
     try {
       setIsDownloading(true);
       setError(null);
-      const tileRes = await axiosInstance.post(
-        `/api/v1/tile/download-tiles/${zoomLevel}`,
-        {
-          folderName,
-          minLon,
-          minLat,
-          maxLon,
-          maxLat,
-        }
-      );
-
       const extent = [minLon, minLat, maxLon, maxLat];
       const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
 
-      const mapDataRes = await axiosInstance.post(`/api/v1/tile/map-data`, {
-        name: folderName,
+      await axiosInstance.post(`/api/v1/tile/download-tiles/${zoomLevel}`, {
+        folderName,
+        minLon,
+        minLat,
+        maxLon,
+        maxLat,
         extent,
         center,
         projection: projection.getCode(),
-        minZoom: 10,
-        maxZoom: 19,
-        thumbnailImage: "",
       });
-
-      console.log("tileRes", tileRes);
-      console.log("mapDataRes", mapDataRes);
     } catch (error) {
       console.error("Error downloading tile:", error);
       setError("Error downloading tile");

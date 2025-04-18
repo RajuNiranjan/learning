@@ -4,14 +4,14 @@ import fs from "fs"
 import { downloadTile } from "../utils/downloadTile.js"
 
 export const downloadTiles = async (req, res) => {
-    const { folderName, minLon, minLat, maxLon, maxLat } = req.body
+    const { folderName, minLon, minLat, maxLon, maxLat, extent, center, projection } = req.body
     const MIN_ZOOM = 10 
     const MAX_ZOOM = 19
     const zoomLevel = req.params.zoomLevel
 
     
     try {
-    const thumbnailTile = lonLatToTile((minLon + maxLon) / 2, (minLat + maxLat) / 2, zoomLevel);
+    const thumbnailTile = lonLatToTile(center[0], center[1], zoomLevel);
 
         const thumbnailPath = path.join("tiles", folderName, `${folderName}_thumbnail.png`);
         
@@ -38,7 +38,18 @@ export const downloadTiles = async (req, res) => {
             }
         }
 
-        res.status(200).json({ message: "Tiles downloaded successfully" })
+        const dbData = {
+            name: folderName,
+            extent,
+            center,
+            projection,
+            thumbnailPath,
+            zoom: [MIN_ZOOM, MAX_ZOOM]
+        }
+        
+        console.log(dbData);
+
+        res.status(200).json({ message: "Tiles downloaded successfully", dbData })
         
         
     } catch (error) {
@@ -47,12 +58,3 @@ export const downloadTiles = async (req, res) => {
     }
 }
 
-export const mapData = async (req, res) => {
- try {
-    console.log(req.body);
-    res.status(200).json({ message: "Map data fetched successfully" })
- } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error" });
- }
-}

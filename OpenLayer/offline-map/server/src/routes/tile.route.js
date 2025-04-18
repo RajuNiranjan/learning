@@ -1,9 +1,8 @@
 import express from 'express'
-import { downloadTiles, mapData } from '../controllers/tile.controller.js';
+import { downloadTiles,  } from '../controllers/tile.controller.js';
 
 export const tileRouter = express.Router()
 
 tileRouter.post("/download-tiles/:zoomLevel", downloadTiles)
-tileRouter.post("/map-data", mapData)
 
 export default tileRouter;
