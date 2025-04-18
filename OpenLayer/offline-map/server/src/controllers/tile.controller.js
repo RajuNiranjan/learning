@@ -7,7 +7,18 @@ export const downloadTiles = async (req, res) => {
     const { folderName, minLon, minLat, maxLon, maxLat } = req.body
     const MIN_ZOOM = 10 
     const MAX_ZOOM = 19
+    const zoomLevel = req.params.zoomLevel
+
+    
     try {
+    const thumbnailTile = lonLatToTile((minLon + maxLon) / 2, (minLat + maxLat) / 2, zoomLevel);
+
+        const thumbnailPath = path.join("tiles", folderName, `${folderName}_thumbnail.png`);
+        
+        ensureDirSync(fs, path.join("tiles", folderName));
+        
+        await downloadTile(zoomLevel, thumbnailTile.x, thumbnailTile.y, thumbnailPath);
+
         for(let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++){
             const topLeftTile = lonLatToTile(minLon, maxLat, zoom)
             const bottomRightTile = lonLatToTile(maxLon, minLat, zoom)

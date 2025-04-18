@@ -35,6 +35,7 @@ const DefaultMapScreen = () => {
   const [isDownloadTileDialogOpen, setIsDownloadTileDialogOpen] =
     useState<boolean>(false);
   const [currentFeature, setCurrentFeature] = useState<Feature | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(12);
   const [coordinates, setCoordinates] = useState<Coordinates>({
     lat: 0,
     lon: 0,
@@ -83,13 +84,16 @@ const DefaultMapScreen = () => {
     try {
       setIsDownloading(true);
       setError(null);
-      const tileRes = await axiosInstance.post("/api/v1/tile/download-tiles", {
-        folderName,
-        minLon,
-        minLat,
-        maxLon,
-        maxLat,
-      });
+      const tileRes = await axiosInstance.post(
+        `/api/v1/tile/download-tiles/${zoomLevel}`,
+        {
+          folderName,
+          minLon,
+          minLat,
+          maxLon,
+          maxLat,
+        }
+      );
 
       const extent = [minLon, minLat, maxLon, maxLat];
       const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
@@ -100,7 +104,7 @@ const DefaultMapScreen = () => {
         center,
         projection: projection.getCode(),
         minZoom: 10,
-        maxZoom: 12,
+        maxZoom: 19,
         thumbnailImage: "",
       });
 
@@ -140,6 +144,15 @@ const DefaultMapScreen = () => {
       });
 
       mapInstanceRef.current = map;
+
+      map?.getView().on("change:resolution", () => {
+        const updatedZoom = map?.getView().getZoom();
+        if (updatedZoom !== undefined) {
+          setZoomLevel(Math.round(updatedZoom));
+        } else {
+          console.error("Zoom level is undefined");
+        }
+      });
 
       const draw = new Draw({
         type: "Circle",
