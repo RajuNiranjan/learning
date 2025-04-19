@@ -1,7 +1,7 @@
 import { Feature, Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import VectorLayer from "ol/layer/Vector";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat, Projection, toLonLat } from "ol/proj";
 import { OSM } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { useEffect, useRef, useState } from "react";
@@ -10,11 +10,20 @@ import Draw, { createBox } from "ol/interaction/Draw";
 import { DrawOption } from "./compoents/DrawOption";
 import { Polygon } from "ol/geom";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
-import { TailDownlodOptionCard } from "./compoents/TailDownlodOptionCard";
+import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
+import { axiosInstance } from "../../utils/axiosInstance";
 
 type Coordinates = {
   lat: number;
   lon: number;
+};
+
+export type FormData = {
+  folderName: string;
+  minLon: number;
+  minLat: number;
+  maxLon: number;
+  maxLat: number;
 };
 
 const DefaultMapScreen = () => {
@@ -26,19 +35,80 @@ const DefaultMapScreen = () => {
   const [isDownloadTileDialogOpen, setIsDownloadTileDialogOpen] =
     useState<boolean>(false);
   const [currentFeature, setCurrentFeature] = useState<Feature | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(12);
   const [coordinates, setCoordinates] = useState<Coordinates>({
     lat: 0,
     lon: 0,
   });
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
+  if (error) {
+    console.log(error);
+  }
+  const projection = new Projection({
+    code: "EPSG:3857",
+    units: "m",
+  });
+
+  const [formData, setFormData] = useState<FormData>({
+    folderName: "",
+    minLon: 0,
+    minLat: 0,
+    maxLon: 0,
+    maxLat: 0,
+  });
+
+  /**
+   * Handling to close the dialog
+   * @returns void
+   */
   const handleDialogClose = () => {
-    setIsDownloadTileDialogOpen(false);
-    if (currentFeature) {
-      vectorSourceRef.current.removeFeature(currentFeature);
-      setCurrentFeature(null);
+    if (!isDownloading) {
+      setIsDownloadTileDialogOpen(false);
+      if (currentFeature) {
+        vectorSourceRef.current.removeFeature(currentFeature);
+        setCurrentFeature(null);
+      }
     }
   };
 
+  /**
+   * Handling to submit the form
+   * @param data - Form data
+   * @returns void
+   */
+  const handleDownloadTileFormSubmit = async (data: FormData) => {
+    const { folderName, minLon, minLat, maxLon, maxLat } = data;
+
+    try {
+      setIsDownloading(true);
+      setError(null);
+      const extent = [minLon, minLat, maxLon, maxLat];
+      const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
+
+      await axiosInstance.post(`/api/v1/tile/download-tiles/${zoomLevel}`, {
+        folderName,
+        minLon,
+        minLat,
+        maxLon,
+        maxLat,
+        extent,
+        center,
+        projection: projection.getCode(),
+      });
+    } catch (error) {
+      console.error("Error downloading tile:", error);
+      setError("Error downloading tile");
+    } finally {
+      setIsDownloading(false);
+      handleDialogClose();
+    }
+  };
+
+  /**
+   * Handling to initialize the map
+   */
   useEffect(() => {
     let map: Map | undefined;
     const raster = new TileLayer({
@@ -56,10 +126,20 @@ const DefaultMapScreen = () => {
         view: new View({
           center: fromLonLat([80.4365, 16.3067]),
           zoom: 12,
+          projection,
         }),
       });
 
       mapInstanceRef.current = map;
+
+      map?.getView().on("change:resolution", () => {
+        const updatedZoom = map?.getView().getZoom();
+        if (updatedZoom !== undefined) {
+          setZoomLevel(Math.round(updatedZoom));
+        } else {
+          console.error("Zoom level is undefined");
+        }
+      });
 
       const draw = new Draw({
         type: "Circle",
@@ -69,17 +149,37 @@ const DefaultMapScreen = () => {
 
       setDrawInteraction(draw);
 
+      /**
+       * Handling to draw the shape
+       * @param e - Draw event
+       * @returns void
+       */
       draw.on("drawend", (e) => {
         const feature = e.feature;
         const geometry = feature?.getGeometry();
         if (geometry instanceof Polygon) {
-          const coordinates = geometry.getCoordinates();
-          console.log(coordinates);
+          const extent = geometry.getExtent();
+          const [minX, minY, maxX, maxY] = extent;
+          const [minLon, minLat] = toLonLat([minX, minY]);
+          const [maxLon, maxLat] = toLonLat([maxX, maxY]);
+
           setCurrentFeature(feature);
           setIsDownloadTileDialogOpen(true);
+          setFormData({
+            folderName: "",
+            minLon,
+            minLat,
+            maxLon,
+            maxLat,
+          });
         }
       });
 
+      /**
+       * Handling to get the coordinates
+       * @param e - Pointer move event
+       * @returns void
+       */
       map.on("pointermove", (e) => {
         const coordinates = toLonLat(e.coordinate);
         setCoordinates({
@@ -96,6 +196,10 @@ const DefaultMapScreen = () => {
     };
   }, []);
 
+  /**
+   * Handling to toggle the draw shape
+   * @returns void
+   */
   const toggleDrawShape = () => {
     if (mapInstanceRef.current && drawInteraction) {
       if (isDrawShape) {
@@ -106,6 +210,10 @@ const DefaultMapScreen = () => {
     }
   };
 
+  /**
+   * Handling to toggle the draw shape
+   * @returns void
+   */
   useEffect(() => {
     toggleDrawShape();
   }, [isDrawShape]);
@@ -119,7 +227,12 @@ const DefaultMapScreen = () => {
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
-        <TailDownlodOptionCard />
+        <TileDownlodOptionCard
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleDownloadTileFormSubmit}
+          isDownloading={isDownloading}
+        />
       </CustomDialog>
     </div>
   );
