@@ -2,6 +2,7 @@ import { lonLatToTile, ensureDirSync } from "../utils/tileHelpers.js";
 import path from "path";
 import fs from "fs";
 import { downloadTile } from "../utils/downloadTile.js";
+import { createTileService, deleteTileService, getTileByIdService, getTileService } from "../models/tile.model.js";
 
 export const downloadTiles = async (req, res) => {
   const {
@@ -68,15 +69,54 @@ export const downloadTiles = async (req, res) => {
       extent,
       center,
       projection,
-      thumbnailBase64,
+      thumbnailBase64Img: thumbnailBase64,
       zoom: [MIN_ZOOM, MAX_ZOOM],
     };
 
-    console.log(dbData);
+    const createdTile = await createTileService(dbData)
 
-    res.status(200).json({ message: "Tiles downloaded successfully", dbData });
+    res.status(200).json({ message: "Tiles downloaded successfully", createdTile });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const getAllTiles = async(req, res) =>{
+    try {
+        const tiles = await getTileService()        
+        res.status(200).json({tiles})
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: "Internal server error"})
+    }
+}
+
+export const getTileById = async(req, res) =>{
+    try {
+        const tileId = req.params.id
+        const tile = await getTileByIdService(tileId)
+        if(!tile){
+            return res.status(404).json({error: "Tile not found"})
+        }
+        res.status(200).json({tile})
+    } catch (error) {
+ console.log(error);
+        res.status(500).json({error: "Internal server error"})
+
+    }
+}
+
+export const deleteTile = async(req, res) =>{
+    try {
+    const tileId= req.params.id
+    const deletedTile = await deleteTileService(tileId)
+    if(!deletedTile){
+        return res.status(404).json({error: "Tile not found"})
+    }
+    res.status(200).json({message: "Tile deleted successfully", deletedTile})
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: "Internal server error"})
+    }
+}

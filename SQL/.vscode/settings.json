@@ -13,6 +13,16 @@
             "database": "e_commerce",
             "username": "root",
             "password": "Raju@1910mysql"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "test",
+            "database": "test",
+            "username": "postgres",
+            "password": "root"
         }
     ]
 }
