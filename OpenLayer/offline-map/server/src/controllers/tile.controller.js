@@ -103,7 +103,7 @@ export const getTileById = async(req, res) =>{
         const tile = await getTileByIdService(tileId)
         const tilePrisma = await prisma.tilePrisma_table.findUnique({
             where: {
-                id: tileId
+                id: parseInt(tileId)
             }
         })
         if(!tile || !tilePrisma){
@@ -123,7 +123,7 @@ export const deleteTile = async(req, res) =>{
     const deletedTile = await deleteTileService(tileId)
     const deletedTilePrisma = await prisma.tilePrisma_table.delete({
         where: {
-            id: tileId
+            id: parseInt(tileId)
         }
     })
     if(!deletedTile || !deletedTilePrisma){

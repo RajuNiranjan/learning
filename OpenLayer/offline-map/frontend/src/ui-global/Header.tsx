@@ -8,7 +8,7 @@ export const Header = () => {
         to="/"
         className={`${
           location.pathname === "/"
-            ? "bg-blue-500 text-white rounded-md px-2"
+            ? "bg-[#aad3df] text-white rounded-md px-2"
             : ""
         }`}
       >
@@ -18,7 +18,7 @@ export const Header = () => {
         to="/map-dashboard"
         className={`${
           location.pathname === "/map-dashboard"
-            ? "bg-blue-500 text-white rounded-md px-2"
+            ? "bg-[#aad3df] text-white rounded-md px-2"
             : ""
         }`}
       >

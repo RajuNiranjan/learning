@@ -16,7 +16,7 @@ const OfflineMapScreen = () => {
     fetchTileData();
   }, []);
   return (
-    <div className="p-4 ">
+    <div className="p-4 bg-[#aad3df] h-screen w-screen">
       <div className="flex items-center gap-2 my-4">
         <div className="flex items-center gap-2 text-gray-600">
           <Link to="/map-dashboard" className="hover:text-blue-500">
@@ -28,8 +28,8 @@ const OfflineMapScreen = () => {
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-5 gap-2">
-        <div className="bg-gray-300 w-full h-max rounded  p-2">
+      <div className="flex flex-col gap-2 absolute top-20 right-10">
+        <div className="bg-white/50 backdrop-blur-sm w-[200px] h-max rounded  p-2">
           <h1 className="text-lg font-bold">Extent</h1>
           <div className="flex flex-col gap-2">
             <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-white bg-gray-400">
@@ -46,7 +46,7 @@ const OfflineMapScreen = () => {
             </p>
           </div>
         </div>
-        <div className="bg-gray-300 w-full h-max rounded  p-2">
+        <div className="bg-white/50 backdrop-blur-sm w-[200px]  h-max rounded  p-2">
           <h1 className="text-lg font-bold">Center</h1>
           <div className="flex flex-col gap-2">
             <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-white bg-gray-400">
@@ -57,7 +57,7 @@ const OfflineMapScreen = () => {
             </p>
           </div>
         </div>
-        <div className="bg-gray-300 w-full h-max rounded  p-2">
+        <div className="bg-white/50 backdrop-blur-sm w-[200px]  h-max rounded  p-2">
           <h1 className="text-lg font-bold">Zoom</h1>
           <div className="flex flex-col gap-2">
             <p className="text-[10px] h-8  w-full flex p-2 justify-start items-center rounded text-white bg-gray-400">
@@ -68,13 +68,13 @@ const OfflineMapScreen = () => {
             </p>
           </div>
         </div>
-        <div className="bg-gray-300 w-full h-max rounded  p-2">
+        <div className="bg-white/50 backdrop-blur-sm w-[200px]  h-max rounded  p-2">
           <h1 className="text-lg font-bold">Projection</h1>
           <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-white bg-gray-400">
             {tileData?.projection}
           </p>
         </div>
-        <div className=" w-full h-[250px]">
+        {/* <div className=" w-full h-[250px]">
           <h1 className="text-lg font-bold">
             Folder Name :{" "}
             <span className="text-red-500 font-bold">{tileData?.name}</span>
@@ -84,7 +84,7 @@ const OfflineMapScreen = () => {
             alt=""
             className="w-full h-max"
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
