@@ -17,23 +17,16 @@ const OfflineMapScreen = () => {
   }, []);
   return (
     <div className="p-4 ">
-      <div className="my-4">
-        <Link to={`/map-dashboard`}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            className="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-            />
-          </svg>
-        </Link>
+      <div className="flex items-center gap-2 my-4">
+        <div className="flex items-center gap-2 text-gray-600">
+          <Link to="/map-dashboard" className="hover:text-blue-500">
+            Dashboard
+          </Link>
+          <span>{">"}</span>
+          <span className="text-blue-500">
+            {tileData?.name || "Loading..."}
+          </span>
+        </div>
       </div>
       <div className="grid grid-cols-5 gap-2">
         <div className="bg-gray-300 w-full h-max rounded  p-2">
