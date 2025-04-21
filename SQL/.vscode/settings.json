@@ -19,8 +19,8 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "test",
-            "database": "test",
+            "name": "offline-map",
+            "database": "tile-table",
             "username": "postgres",
             "password": "root"
         }
