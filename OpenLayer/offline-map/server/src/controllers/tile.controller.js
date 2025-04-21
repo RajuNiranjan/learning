@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { downloadTile } from "../utils/downloadTile.js";
 import { createTileService, deleteTileService, getTileByIdService, getTileService } from "../models/tile.model.js";
+import { prisma } from "../prismaClient.js";
 
 export const downloadTiles = async (req, res) => {
   const {
@@ -74,8 +75,11 @@ export const downloadTiles = async (req, res) => {
     };
 
     const createdTile = await createTileService(dbData)
+    const createdTilePrisma = await prisma.tilePrisma_table.create({  
+      data: dbData,
+    });
 
-    res.status(200).json({ message: "Tiles downloaded successfully", createdTile });
+    res.status(200).json({ message: "Tiles downloaded successfully", createdTile, createdTilePrisma });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
@@ -85,7 +89,8 @@ export const downloadTiles = async (req, res) => {
 export const getAllTiles = async(req, res) =>{
     try {
         const tiles = await getTileService()        
-        res.status(200).json({tiles})
+        const tilesPrisma = await prisma.tilePrisma_table.findMany()
+        res.status(200).json({tiles, tilesPrisma})
     } catch (error) {
         console.log(error);
         res.status(500).json({error: "Internal server error"})
@@ -96,10 +101,15 @@ export const getTileById = async(req, res) =>{
     try {
         const tileId = req.params.id
         const tile = await getTileByIdService(tileId)
-        if(!tile){
+        const tilePrisma = await prisma.tilePrisma_table.findUnique({
+            where: {
+                id: tileId
+            }
+        })
+        if(!tile || !tilePrisma){
             return res.status(404).json({error: "Tile not found"})
         }
-        res.status(200).json({tile})
+        res.status(200).json({tile, tilePrisma})
     } catch (error) {
  console.log(error);
         res.status(500).json({error: "Internal server error"})
@@ -111,7 +121,12 @@ export const deleteTile = async(req, res) =>{
     try {
     const tileId= req.params.id
     const deletedTile = await deleteTileService(tileId)
-    if(!deletedTile){
+    const deletedTilePrisma = await prisma.tilePrisma_table.delete({
+        where: {
+            id: tileId
+        }
+    })
+    if(!deletedTile || !deletedTilePrisma){
         return res.status(404).json({error: "Tile not found"})
     }
     res.status(200).json({message: "Tile deleted successfully", deletedTile})

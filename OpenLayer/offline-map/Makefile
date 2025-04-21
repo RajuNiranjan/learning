@@ -1,4 +1,4 @@
-.PHONY: install app dev build api
+.PHONY: install app dev build api prisma
 
 install i:
 	cd frontend && npm install
@@ -19,3 +19,8 @@ dev:
 
 clean:
 	rm -rf cd server/tiles/*
+
+prisma:
+	cd server && npx prisma generate
+	cd server && npx prisma migrate dev
+	

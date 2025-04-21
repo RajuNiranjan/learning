@@ -42,7 +42,7 @@ export const MapThumbNailCard = () => {
         <div className="flex justify-center items-center h-full">
           <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
         </div>
-      ) : (
+      ) : tiles.length > 0 ? (
         tiles.map((tile, idx) => {
           return (
             <Link
@@ -61,6 +61,10 @@ export const MapThumbNailCard = () => {
             </Link>
           );
         })
+      ) : (
+        <div className="flex justify-center items-center w-screen h-[calc(100vh-40px)]">
+          <div className="text-2xl font-bold text-center">No tiles found</div>
+        </div>
       )}
     </>
   );
