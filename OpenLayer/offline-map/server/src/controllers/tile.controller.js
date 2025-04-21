@@ -75,7 +75,7 @@ export const downloadTiles = async (req, res) => {
     };
 
     const createdTile = await createTileService(dbData)
-    const createdTilePrisma = await prisma.tilePrisma_table.create({  
+    const createdTilePrisma = await prisma.tile_Prisma_table.create({  
       data: dbData,
     });
 
@@ -89,7 +89,7 @@ export const downloadTiles = async (req, res) => {
 export const getAllTiles = async(req, res) =>{
     try {
         const tiles = await getTileService()        
-        const tilesPrisma = await prisma.tilePrisma_table.findMany()
+        const tilesPrisma = await prisma.tile_Prisma_table.findMany()
         res.status(200).json({tiles, tilesPrisma})
     } catch (error) {
         console.log(error);
@@ -97,23 +97,62 @@ export const getAllTiles = async(req, res) =>{
     }
 }
 
-export const getTileById = async(req, res) =>{
+export const getTileById = async(req, res) => {
     try {
-        const tileId = req.params.id
-        const tile = await getTileByIdService(tileId)
-        const tilePrisma = await prisma.tilePrisma_table.findUnique({
+        const tileId = req.params.id;
+        
+        const tile = await getTileByIdService(tileId);
+        
+        
+        const tilePrisma = await prisma.tile_Prisma_table.findUnique({
             where: {
                 id: parseInt(tileId)
             }
-        })
-        if(!tile || !tilePrisma){
-            return res.status(404).json({error: "Tile not found"})
-        }
-        res.status(200).json({tile, tilePrisma})
-    } catch (error) {
- console.log(error);
-        res.status(500).json({error: "Internal server error"})
+        });
 
+        if (!tile) {
+            return res.status(404).json({ error: "Tile not found" });
+        } 
+        
+
+        // Get the tile files from the filesystem
+        const tileFolder = path.join("tiles", tile.name);
+        const tileFiles = {};
+
+        // Read all zoom levels
+        for (let zoom = tile.zoom[0]; zoom <= tile.zoom[1]; zoom++) {
+            const zoomPath = path.join(tileFolder, zoom.toString());
+            if (fs.existsSync(zoomPath)) {
+                tileFiles[zoom] = {};
+                
+                // Read x directories
+                const xDirs = fs.readdirSync(zoomPath);
+                for (const x of xDirs) {
+                    const xPath = path.join(zoomPath, x);
+                    tileFiles[zoom][x] = {};
+                    
+                    // Read y files
+                    const yFiles = fs.readdirSync(xPath)
+                        .filter(file => file.endsWith('.png'))
+                        .map(file => file.replace('.png', ''));
+                    
+                    for (const y of yFiles) {
+                        const tilePath = path.join(xPath, `${y}.png`);
+                        const tileBuffer = fs.readFileSync(tilePath);
+                        tileFiles[zoom][x][y] = tileBuffer.toString('base64');
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({
+            tile,
+            tilePrisma,
+            tileFiles,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: "Internal server error"});
     }
 }
 
@@ -121,7 +160,7 @@ export const deleteTile = async(req, res) =>{
     try {
     const tileId= req.params.id
     const deletedTile = await deleteTileService(tileId)
-    const deletedTilePrisma = await prisma.tilePrisma_table.delete({
+    const deletedTilePrisma = await prisma.tile_Prisma_table.delete({
         where: {
             id: parseInt(tileId)
         }
