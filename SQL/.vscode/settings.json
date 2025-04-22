@@ -23,6 +23,16 @@
             "database": "tile-table",
             "username": "postgres",
             "password": "root"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Learnings",
+            "database": "Learnings",
+            "username": "postgres",
+            "password": "root"
         }
     ]
 }
