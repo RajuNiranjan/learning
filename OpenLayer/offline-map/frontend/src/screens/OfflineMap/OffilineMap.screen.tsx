@@ -1,67 +1,118 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Tile } from "../MapDashBoard/components/MapThumbNailCard";
 import { axiosInstance } from "../../utils/axiosInstance";
-import Map from "ol/Map";
-import View from "ol/View";
+import { Tile } from "../MapDashBoard/components/MapThumbNailCard";
+import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
+import { fromLonLat } from "ol/proj";
 import XYZ from "ol/source/XYZ";
 
 const OfflineMapScreen = () => {
   const { tileId } = useParams();
-  const mapRef = useRef<HTMLDivElement>(null);
   const [tileData, setTileData] = useState<Tile | null>(null);
+  const offlineMapRef = useRef<HTMLDivElement | null>(null);
   const [tileFiles, setTileFiles] = useState<Record<string, any> | null>(null);
+
+  // Add debugging logs
+  useEffect(() => {
+    console.log("Current tileData:", tileData);
+    console.log("Current tileFiles structure:", tileFiles);
+  }, [tileData, tileFiles]);
 
   useEffect(() => {
     const fetchTileData = async () => {
-      const res = await axiosInstance.get(`/api/v1/tile/${tileId}`);
-      // console.log(res.data.tileFiles);
-      setTileData(res.data.tile);
-      setTileFiles(res.data.tileFiles);
+      try {
+        const res = await axiosInstance.get(`/api/v1/tile/${tileId}`);
+        setTileData(res.data.tile);
+        setTileFiles(res.data.tileFiles);
+      } catch (error) {
+        console.error("Error fetching tile data:", error);
+      }
     };
     fetchTileData();
   }, [tileId]);
 
+  /**
+   * Initializing the map with custom tile layer
+   */
   useEffect(() => {
-    if (tileData && tileFiles && mapRef.current) {
-      // Create custom tile source using the downloaded tiles
-      const tileSource = new XYZ({
-        tileLoadFunction: (tile, src) => {
-          const [z, x, y] = src.split("/").slice(-3);
-          const zoom = z;
-          const tileBase64 = tileFiles[zoom]?.[x]?.[y.replace(".png", "")];
+    let offlineMap: Map | undefined;
 
-          if (tileBase64) {
-            const img = tile.getImage();
-            if (img instanceof HTMLImageElement) {
-              img.src = `data:image/png;base64,${tileBase64}`;
-            }
-          }
-        },
-        url: "tiles/{z}/{x}/{y}.png", // This is just for the tile URL pattern
+    if (offlineMapRef.current && tileFiles && tileData) {
+      console.log("Initializing map with:", {
+        center: tileData.center,
+        zoom: tileData.zoom,
+        extent: tileData.extent,
       });
 
-      const map = new Map({
-        target: mapRef.current,
-        layers: [
-          new TileLayer({
-            source: tileSource,
-          }),
-        ],
+      const customTileSource = new XYZ({
+        tileLoadFunction: (imageTile, src) => {
+          const tileCoord = imageTile.getTileCoord();
+          if (!tileCoord) return;
+
+          const z = String(tileCoord[0]);
+          const x = String(tileCoord[1]);
+          const y = String(tileCoord[2]);
+
+          console.log("Loading tile:", { z, x, y }); // Debug log
+
+          try {
+            if (tileFiles[z]?.[x]?.[y]) {
+              const img = imageTile.getImage() as HTMLImageElement;
+              img.src = `data:image/png;base64,${tileFiles[z][x][y]}`;
+              console.log("Tile found and loaded"); // Debug log
+            } else {
+              console.log("Tile not found in cache"); // Debug log
+              const img = imageTile.getImage() as HTMLImageElement;
+              img.src =
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+            }
+          } catch (error) {
+            console.error("Error loading tile:", error);
+          }
+        },
+        url: "dummy/{z}/{x}/{y}",
+      });
+
+      const raster = new TileLayer({
+        source: customTileSource,
+      });
+
+      offlineMap = new Map({
+        target: offlineMapRef.current,
+        layers: [raster],
         view: new View({
-          center: tileData.center,
+          center: fromLonLat(tileData.center),
           zoom: tileData.zoom[0],
+          maxZoom: tileData.zoom[1],
+          projection: "EPSG:3857",
         }),
       });
 
-      return () => map.setTarget(undefined);
+      // Add map event listeners for debugging
+      offlineMap.on("moveend", () => {
+        const view = offlineMap?.getView();
+        console.log("Map state:", {
+          zoom: view?.getZoom(),
+          center: view?.getCenter(),
+          resolution: view?.getResolution(),
+        });
+      });
+
+      return () => {
+        offlineMap?.setTarget(undefined);
+      };
     }
-  }, [tileData, tileFiles]);
+  }, [tileFiles, tileData]);
+
+  if (!tileData || !tileFiles) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="p-4 bg-[#aad3df] h-screen w-screen">
-      <div className="flex items-center gap-2 my-4">
+    <div className=" bg-[#aad3df] h-screen w-screen">
+      <div ref={offlineMapRef} className="h-full w-full bg-[#aad3df]" />
+      <div className="flex items-center gap-2 my-4 absolute top-0 left-20">
         <div className="flex items-center gap-2 text-gray-600">
           <Link to="/map-dashboard" className="hover:text-blue-500">
             Dashboard
@@ -72,10 +123,7 @@ const OfflineMapScreen = () => {
           </span>
         </div>
       </div>
-      <div
-        ref={mapRef}
-        className="w-full h-[calc(100vh-120px)] rounded-lg shadow-lg"
-      />
+
       <div className="flex flex-col gap-2 absolute top-20 right-10">
         <div className="bg-white/50 backdrop-blur-sm w-[200px] h-max rounded  p-2">
           <h1 className="text-lg font-bold">Extent</h1>
