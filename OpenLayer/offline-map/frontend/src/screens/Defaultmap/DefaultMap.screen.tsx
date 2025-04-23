@@ -12,6 +12,8 @@ import { Polygon } from "ol/geom";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
 import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
 import { axiosInstance } from "../../utils/axiosInstance";
+import { DefaultMapHeader } from "./compoents/DefaultMapHeader";
+import { MapAreaTool } from "./compoents/MapAreaTool";
 
 type Coordinates = {
   lat: number;
@@ -219,11 +221,16 @@ const DefaultMapScreen = () => {
   }, [isDrawShape]);
 
   return (
-    <div>
-      <div ref={mapRef} className="w-screen h-[calc(100vh-40px)]" />
+    <div className="w-screen h-screen ">
+      <DefaultMapHeader
+        isDrawShape={isDrawShape}
+        setIsDrawShape={setIsDrawShape}
+      />
+      <MapAreaTool />
+      <div ref={mapRef} className="w-screen h-[calc(100vh-80px)]" />
       <CoordianteCard coordinates={coordinates} />
-      <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} />
-      <CustomDialog
+      {/* <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} /> */}
+      {/* <CustomDialog
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
@@ -233,7 +240,7 @@ const DefaultMapScreen = () => {
           onSubmit={handleDownloadTileFormSubmit}
           isDownloading={isDownloading}
         />
-      </CustomDialog>
+      </CustomDialog> */}
     </div>
   );
 };
