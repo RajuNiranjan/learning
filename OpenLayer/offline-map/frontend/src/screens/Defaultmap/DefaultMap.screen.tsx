@@ -7,13 +7,13 @@ import VectorSource from "ol/source/Vector";
 import { useEffect, useRef, useState } from "react";
 import { CoordianteCard } from "./compoents/CoordianteCard";
 import Draw, { createBox } from "ol/interaction/Draw";
-import { DrawOption } from "./compoents/DrawOption";
 import { Polygon } from "ol/geom";
-import { CustomDialog } from "../../ui-global/CustomeDialog";
 import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
 import { axiosInstance } from "../../utils/axiosInstance";
 import { DefaultMapHeader } from "./compoents/DefaultMapHeader";
 import { MapAreaTool } from "./compoents/MapAreaTool";
+import { defaults as defaultControls } from "ol/control";
+import { ZoomControls } from "./compoents/ZoomControls";
 
 type Coordinates = {
   lat: number;
@@ -44,7 +44,6 @@ const DefaultMapScreen = () => {
   });
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   if (error) {
     console.log(error);
   }
@@ -125,6 +124,7 @@ const DefaultMapScreen = () => {
       map = new Map({
         target: mapRef.current,
         layers: [raster, vector],
+        controls: defaultControls({ zoom: false }),
         view: new View({
           center: fromLonLat([80.4365, 16.3067]),
           zoom: 12,
@@ -133,7 +133,6 @@ const DefaultMapScreen = () => {
       });
 
       mapInstanceRef.current = map;
-
       map?.getView().on("change:resolution", () => {
         const updatedZoom = map?.getView().getZoom();
         if (updatedZoom !== undefined) {
@@ -229,6 +228,10 @@ const DefaultMapScreen = () => {
       <MapAreaTool />
       <div ref={mapRef} className="w-screen h-[calc(100vh-80px)]" />
       <CoordianteCard coordinates={coordinates} />
+      <ZoomControls
+        mapInstanceRef={mapInstanceRef as React.RefObject<Map>}
+        zoomLevel={zoomLevel}
+      />
       {/* <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} /> */}
       {/* <CustomDialog
         isOpen={isDownloadTileDialogOpen}
