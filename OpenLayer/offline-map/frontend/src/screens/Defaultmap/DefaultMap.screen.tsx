@@ -14,6 +14,7 @@ import { DefaultMapHeader } from "./compoents/DefaultMapHeader";
 import { MapAreaTool } from "./compoents/MapAreaTool";
 import { defaults as defaultControls } from "ol/control";
 import { ZoomControls } from "./compoents/ZoomControls";
+import { CustomDialog } from "../../ui-global/CustomeDialog";
 
 type Coordinates = {
   lat: number;
@@ -233,7 +234,7 @@ const DefaultMapScreen = () => {
         zoomLevel={zoomLevel}
       />
       {/* <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} /> */}
-      {/* <CustomDialog
+      <CustomDialog
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
@@ -242,8 +243,9 @@ const DefaultMapScreen = () => {
           setFormData={setFormData}
           onSubmit={handleDownloadTileFormSubmit}
           isDownloading={isDownloading}
+          onClose={handleDialogClose}
         />
-      </CustomDialog> */}
+      </CustomDialog>
     </div>
   );
 };
