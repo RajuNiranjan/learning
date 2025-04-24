@@ -17,11 +17,9 @@ computerChoice = int(random.choice('123'))
 
 print("=====================")
 print("   Game starts Now   ")
-print("=====================")
 print("")
 
 print(f'You Choosen: {RPS(playersChoice).name}')
-print("")
 print(f'You Choosen: {RPS(computerChoice).name}')
 print("")
 print("")
@@ -34,6 +32,5 @@ else:
     print("You Lose 🤦‍♂️")
 
 print("")
-print("=====================")
 print("   Game Over Now   ")
 print("=====================")
