@@ -11,6 +11,7 @@ export interface Tile {
   center: number[];
   zoom: number[];
   projection: string;
+  mapSource: string;
 }
 
 export const MapThumbNailCard = () => {

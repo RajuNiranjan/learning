@@ -3,8 +3,18 @@ import fs from "fs";
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-export async function downloadTile(z, x, y, outputPath, retries = 3) {
-  const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+export async function downloadTile(
+  z,
+  x,
+  y,
+  outputPath,
+  mapSource = "OSM",
+  retries = 3
+) {
+  const url =
+    mapSource === "Google Map"
+      ? `https://mt1.google.com/vt/lyrs=s&x=${x}&y=${y}&z=${z}` // Google Maps tile URL
+      : `https://tile.openstreetmap.org/${z}/${x}/${y}.png`; // OSM tile URL
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -12,6 +22,8 @@ export async function downloadTile(z, x, y, outputPath, retries = 3) {
         headers: {
           "User-Agent": "OfflineMapTool/1.0",
           Accept: "image/png,image/*",
+          // Add a referer for Google Maps tiles
+          ...(mapSource === "Google Map" && { Referer: "http://localhost" }),
         },
         timeout: 5000,
       });

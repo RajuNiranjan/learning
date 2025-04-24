@@ -19,9 +19,10 @@ export const downloadTiles = async (req, res) => {
     extent,
     center,
     projection,
+    mapSource,
   } = req.body;
   const MIN_ZOOM = 10;
-  const MAX_ZOOM = 18;
+  const MAX_ZOOM = 17;
   const zoomLevel = req.params.zoomLevel;
 
   try {
@@ -39,7 +40,8 @@ export const downloadTiles = async (req, res) => {
       zoomLevel,
       thumbnailTile.x,
       thumbnailTile.y,
-      thumbnailPath
+      thumbnailPath,
+      mapSource
     );
 
     for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
@@ -59,7 +61,7 @@ export const downloadTiles = async (req, res) => {
           const outputPath = path.join(dirPath, `${y}.png`);
           if (!fs.existsSync(outputPath)) {
             console.log(`Downloading tile ${zoom}/${x}/${y}`);
-            await downloadTile(zoom, x, y, outputPath);
+            await downloadTile(zoom, x, y, outputPath, mapSource);
             console.log(`Tile ${zoom}/${x}/${y} downloaded successfully`);
           }
         }
@@ -118,22 +120,26 @@ export const getTileById = async (req, res) => {
       if (fs.existsSync(zoomPath)) {
         tileFiles[zoom] = {};
 
-        const xDirs = fs.readdirSync(zoomPath);
+        const xDirs = fs
+          .readdirSync(zoomPath)
+          .filter((file) => !file.startsWith("."));
 
         for (const x of xDirs) {
           const xPath = path.join(zoomPath, x);
-          tileFiles[zoom][x] = {};
+          if (fs.statSync(xPath).isDirectory()) {
+            tileFiles[zoom][x] = {};
 
-          const yFiles = fs
-            .readdirSync(xPath)
-            .filter((file) => file.endsWith(".png"))
-            .map((file) => file.replace(".png", ""));
+            const yFiles = fs
+              .readdirSync(xPath)
+              .filter((file) => file.endsWith(".png"))
+              .map((file) => file.replace(".png", ""));
 
-          for (const y of yFiles) {
-            const tilePath = path.join(xPath, `${y}.png`);
-            const tileBuffer = fs.readFileSync(tilePath);
-            const tileBase64 = tileBuffer.toString("base64");
-            tileFiles[zoom][x][y] = tileBase64;
+            for (const y of yFiles) {
+              const tilePath = path.join(xPath, `${y}.png`);
+              const tileBuffer = fs.readFileSync(tilePath);
+              const tileBase64 = tileBuffer.toString("base64");
+              tileFiles[zoom][x][y] = tileBase64;
+            }
           }
         }
       }

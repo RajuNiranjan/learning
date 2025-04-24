@@ -108,6 +108,8 @@ const DefaultMapScreen = () => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 500);
 
+      console.log("currentMapSource", currentMapSource);
+
       await axiosInstance.post(`/api/v1/tile/download-tiles/${zoomLevel}`, {
         folderName,
         minLon,
@@ -117,6 +119,7 @@ const DefaultMapScreen = () => {
         extent,
         center,
         projection: projection.getCode(),
+        mapSource: currentMapSource,
       });
 
       clearInterval(progressInterval);
@@ -146,13 +149,17 @@ const DefaultMapScreen = () => {
    */
   useEffect(() => {
     let map: Map | undefined;
-
     const osmSource = new OSM();
-
     const googleSource = new XYZ({
-      url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+      url: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
       crossOrigin: "anonymous",
     });
+
+    // Get the current view state if map exists
+    const currentZoom = mapInstanceRef.current?.getView().getZoom() || 12;
+    const currentCenter =
+      mapInstanceRef.current?.getView().getCenter() ||
+      fromLonLat([80.4365, 16.3067]);
 
     const raster = new TileLayer({
       source: currentMapSource === "OSM Map" ? osmSource : googleSource,
@@ -168,8 +175,10 @@ const DefaultMapScreen = () => {
         layers: [raster, vector],
         controls: defaultControls({ zoom: false }),
         view: new View({
-          center: fromLonLat([80.4365, 16.3067]),
-          zoom: 12,
+          center: currentCenter,
+          zoom: currentZoom,
+          minZoom: 3,
+          maxZoom: 18,
           projection,
         }),
       });
