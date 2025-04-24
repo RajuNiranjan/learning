@@ -15,6 +15,7 @@ import { MapAreaTool } from "./compoents/MapAreaTool";
 import { defaults as defaultControls } from "ol/control";
 import { ZoomControls } from "./compoents/ZoomControls";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
+import { DownloadStatusCard } from "./compoents/DownloadStatusCard";
 
 type Coordinates = {
   lat: number;
@@ -45,6 +46,13 @@ const DefaultMapScreen = () => {
   });
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSaveOption, setSelectedSaveOption] = useState<string | null>(
+    null
+  );
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloadComplete, setIsDownloadComplete] = useState(false);
+  const [showDownloadStatus, setShowDownloadStatus] = useState(false);
+
   if (error) {
     console.log(error);
   }
@@ -86,8 +94,15 @@ const DefaultMapScreen = () => {
     try {
       setIsDownloading(true);
       setError(null);
+      setIsDownloadTileDialogOpen(false);
+      setShowDownloadStatus(true);
+
       const extent = [minLon, minLat, maxLon, maxLat];
       const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
+
+      const progressInterval = setInterval(() => {
+        setDownloadProgress((prev) => Math.min(prev + 10, 90));
+      }, 500);
 
       await axiosInstance.post(`/api/v1/tile/download-tiles/${zoomLevel}`, {
         folderName,
@@ -99,12 +114,26 @@ const DefaultMapScreen = () => {
         center,
         projection: projection.getCode(),
       });
+
+      clearInterval(progressInterval);
+      setDownloadProgress(100);
+      setIsDownloadComplete(true);
     } catch (error) {
       console.error("Error downloading tile:", error);
       setError("Error downloading tile");
+      setShowDownloadStatus(false);
     } finally {
       setIsDownloading(false);
-      handleDialogClose();
+    }
+  };
+
+  const handleDownloadStatusClose = () => {
+    setShowDownloadStatus(false);
+    setDownloadProgress(0);
+    setIsDownloadComplete(false);
+    if (currentFeature) {
+      vectorSourceRef.current.removeFeature(currentFeature);
+      setCurrentFeature(null);
     }
   };
 
@@ -166,7 +195,6 @@ const DefaultMapScreen = () => {
           const [maxLon, maxLat] = toLonLat([maxX, maxY]);
 
           setCurrentFeature(feature);
-          setIsDownloadTileDialogOpen(true);
           setFormData({
             folderName: "",
             minLon,
@@ -208,6 +236,8 @@ const DefaultMapScreen = () => {
         mapInstanceRef.current.addInteraction(drawInteraction);
       } else {
         mapInstanceRef.current.removeInteraction(drawInteraction);
+        vectorSourceRef.current.clear();
+        setCurrentFeature(null);
       }
     }
   };
@@ -220,11 +250,20 @@ const DefaultMapScreen = () => {
     toggleDrawShape();
   }, [isDrawShape]);
 
+  const handleSaveOptionSelect = (option: string) => {
+    if (currentFeature) {
+      setSelectedSaveOption(option);
+      setIsDownloadTileDialogOpen(true);
+    }
+  };
+
   return (
     <div className="w-screen h-screen ">
       <DefaultMapHeader
         isDrawShape={isDrawShape}
         setIsDrawShape={setIsDrawShape}
+        onSaveOptionSelect={handleSaveOptionSelect}
+        hasDrawnShape={!!currentFeature}
       />
       <MapAreaTool />
       <div ref={mapRef} className="w-screen h-[calc(100vh-80px)]" />
@@ -232,6 +271,12 @@ const DefaultMapScreen = () => {
       <ZoomControls
         mapInstanceRef={mapInstanceRef as React.RefObject<Map>}
         zoomLevel={zoomLevel}
+      />
+      <DownloadStatusCard
+        isVisible={showDownloadStatus}
+        progress={downloadProgress}
+        isCompleted={isDownloadComplete}
+        onClose={handleDownloadStatusClose}
       />
       {/* <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} /> */}
       <CustomDialog

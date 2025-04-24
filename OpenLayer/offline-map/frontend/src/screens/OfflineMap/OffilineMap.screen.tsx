@@ -6,6 +6,7 @@ import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import { fromLonLat } from "ol/proj";
 import XYZ from "ol/source/XYZ";
+import { Loader } from "../../ui-global/Loader";
 
 const OfflineMapScreen = () => {
   const { tileId } = useParams();
@@ -13,7 +14,6 @@ const OfflineMapScreen = () => {
   const offlineMapRef = useRef<HTMLDivElement | null>(null);
   const [tileFiles, setTileFiles] = useState<Record<string, any> | null>(null);
 
-  // Add debugging logs
   useEffect(() => {
     console.log("Current tileData:", tileData);
     console.log("Current tileFiles structure:", tileFiles);
@@ -83,7 +83,8 @@ const OfflineMapScreen = () => {
         layers: [raster],
         view: new View({
           center: fromLonLat(tileData.center),
-          zoom: tileData.zoom[0],
+          zoom: 16,
+          minZoom: tileData.zoom[0],
           maxZoom: tileData.zoom[1],
           projection: "EPSG:3857",
         }),
@@ -106,7 +107,11 @@ const OfflineMapScreen = () => {
   }, [tileFiles, tileData]);
 
   if (!tileData || !tileFiles) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen w-screen">
+        <Loader />
+      </div>
+    );
   }
 
   return (
@@ -170,17 +175,6 @@ const OfflineMapScreen = () => {
             {tileData?.projection}
           </p>
         </div>
-        {/* <div className=" w-full h-[250px]">
-          <h1 className="text-lg font-bold">
-            Folder Name :{" "}
-            <span className="text-red-500 font-bold">{tileData?.name}</span>
-          </h1>
-          <img
-            src={`data:image/png;base64,${tileData?.thubmnailbase64img}`}
-            alt=""
-            className="w-full h-max"
-          />
-        </div> */}
       </div>
     </div>
   );

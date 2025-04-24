@@ -21,7 +21,7 @@ export const downloadTiles = async (req, res) => {
     projection,
   } = req.body;
   const MIN_ZOOM = 10;
-  const MAX_ZOOM = 16;
+  const MAX_ZOOM = 18;
   const zoomLevel = req.params.zoomLevel;
 
   try {

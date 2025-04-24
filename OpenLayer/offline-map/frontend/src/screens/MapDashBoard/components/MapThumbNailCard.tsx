@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { axiosInstance } from "../../../utils/axiosInstance";
 import { Link } from "react-router-dom";
+import { FolerIcon, VeticalEllipsisIcon } from "../../../assets/assets";
 
 export interface Tile {
   id: number;
@@ -52,17 +53,37 @@ export const MapThumbNailCard = () => {
           return (
             <div
               key={idx}
-              className="h-52 w-72 rounded shadow-md relative overflow-hidden"
+              className="h-[24.25rem] w-[26rem] bg-[#1C1C1EBF] p-[1rem] rounded-[0.5rem]"
             >
-              <Link to={`/offline-map/${tile?.name}/${tile?.id}`}>
+              <div className="h-[1.5rem] mb-[0.25rem] flex justify-between items-center">
+                <div className="flex items-center gap-[0.25rem]">
+                  <h1 className="text-[#FFF] text-[0.875rem] font-medium leading-[1.25rem] tracking-[0.00625rem]">
+                    {tile?.name}
+                  </h1>
+                  <img
+                    src={FolerIcon}
+                    alt="folder"
+                    className="size-[1.25rem]"
+                  />
+                </div>
                 <img
-                  src={`data:image/png;base64,${tile?.thubmnailbase64img}`}
-                  alt="map-thumbnail"
-                  className="w-full h-full object-cover rounded"
+                  src={VeticalEllipsisIcon}
+                  alt="ellipsis"
+                  className="size-[1.25rem]"
                 />
-              </Link>
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 text-white flex justify-between items-center">
-                <h3 className="text-lg font-bold">{tile?.name}</h3>
+              </div>
+              <div className="w-full h-[1rem] mb-[0.75rem]">
+                <p className="text-white text-xs">
+                  <span>{tile?.center[0]}</span> -{" "}
+                  <span>{tile?.center[1]}</span>
+                </p>
+              </div>
+              <img
+                src={`data:image/png;base64,${tile?.thubmnailbase64img}`}
+                alt="map-thumbnail"
+                className="w-full h-[16rem] object-cover rounded mb-[0.75rem]"
+              />
+              <div className="flex justify-between items-center">
                 <div onClick={() => handleDeleteTile(tile?.id)}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -79,6 +100,12 @@ export const MapThumbNailCard = () => {
                     />
                   </svg>
                 </div>
+                <Link
+                  to={`/offline-map/${tile?.name}/${tile?.id}`}
+                  className="w-[3.5rem] h-[2rem] border border-[#FFFFFF80] text-[#FFF] text-[0.75rem] leading-[1rem] tracking-[0.00625rem] font-medium rounded-[0.25rem] py-[0.5rem] px-[1rem] flex justify-center items-center"
+                >
+                  Use
+                </Link>
               </div>
             </div>
           );

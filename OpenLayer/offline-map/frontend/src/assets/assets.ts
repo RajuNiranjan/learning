@@ -3,6 +3,8 @@ import ChevronDownIcon from './chevron-down.svg'
 import SearchIcon from './search.svg'
 import ZoomInIcon from './zoom-in.svg'
 import ZoomOutIcon from './zoom-out.svg'
+import FolerIcon from './folder-fill.svg'
+import VeticalEllipsisIcon from './vertial-ellipsis.svg'
 
 export {
     ArrowLeftIcon,
@@ -10,4 +12,6 @@ export {
   SearchIcon,
   ZoomInIcon,
   ZoomOutIcon,
+  FolerIcon,
+  VeticalEllipsisIcon,
 };
