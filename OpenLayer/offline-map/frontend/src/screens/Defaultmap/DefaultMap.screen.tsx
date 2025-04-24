@@ -16,6 +16,7 @@ import { defaults as defaultControls } from "ol/control";
 import { ZoomControls } from "./compoents/ZoomControls";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
 import { DownloadStatusCard } from "./compoents/DownloadStatusCard";
+import XYZ from "ol/source/XYZ";
 
 type Coordinates = {
   lat: number;
@@ -52,6 +53,9 @@ const DefaultMapScreen = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloadComplete, setIsDownloadComplete] = useState(false);
   const [showDownloadStatus, setShowDownloadStatus] = useState(false);
+  const [currentMapSource, setCurrentMapSource] = useState<string>("OSM Map");
+
+  console.log("currentMapSource", currentMapSource);
 
   if (error) {
     console.log(error);
@@ -142,8 +146,16 @@ const DefaultMapScreen = () => {
    */
   useEffect(() => {
     let map: Map | undefined;
+
+    const osmSource = new OSM();
+
+    const googleSource = new XYZ({
+      url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+      crossOrigin: "anonymous",
+    });
+
     const raster = new TileLayer({
-      source: new OSM(),
+      source: currentMapSource === "OSM Map" ? osmSource : googleSource,
     });
 
     const vector = new VectorLayer({
@@ -224,7 +236,7 @@ const DefaultMapScreen = () => {
         map.setTarget(undefined);
       }
     };
-  }, []);
+  }, [currentMapSource]);
 
   /**
    * Handling to toggle the draw shape
@@ -257,6 +269,11 @@ const DefaultMapScreen = () => {
     }
   };
 
+  // Add handler for map source changes
+  const handleMapSourceChange = (source: string) => {
+    setCurrentMapSource(source);
+  };
+
   return (
     <div className="w-screen h-screen ">
       <DefaultMapHeader
@@ -265,7 +282,7 @@ const DefaultMapScreen = () => {
         onSaveOptionSelect={handleSaveOptionSelect}
         hasDrawnShape={!!currentFeature}
       />
-      <MapAreaTool />
+      <MapAreaTool onMapSourceChange={handleMapSourceChange} />
       <div ref={mapRef} className="w-screen h-[calc(100vh-80px)]" />
       <CoordianteCard coordinates={coordinates} />
       <ZoomControls

@@ -2,12 +2,16 @@ import { useState } from "react";
 import { SearchIcon } from "../../../assets/assets";
 import { Select } from "../../../ui-global/Slect";
 
-export const MapAreaTool = () => {
+export const MapAreaTool = ({
+  onMapSourceChange,
+}: {
+  onMapSourceChange: (source: string) => void;
+}) => {
   const [mapSource, setMapSource] = useState<string>("OSM Map");
 
   const handleMapSourceChange = (value: string) => {
     setMapSource(value);
-    console.log(mapSource);
+    onMapSourceChange(value);
   };
 
   return (
@@ -35,7 +39,7 @@ export const MapAreaTool = () => {
           optionContainerCss="text-[0.75rem] font-normal leading-[1rem] tracking-[0.025rem] bg-[#212021]"
           optionsCss="px-2 py-1 bg-[#212021] text-[#FFFFFF] hover:bg-[#1C1C1EBF]"
           optionHighlightColor="bg-gray-700"
-          options={["OSM Map", "Google Map", "Bing Map"]}
+          options={["OSM Map", "Google Map"]}
           value={mapSource}
           onChange={handleMapSourceChange}
         />
