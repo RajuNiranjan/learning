@@ -77,6 +77,7 @@ export const downloadTiles = async (req, res) => {
       center,
       projection,
       thumbnailBase64Img: thumbnailBase64,
+      mapSource,
       zoom: [MIN_ZOOM, MAX_ZOOM],
     };
 

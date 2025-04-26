@@ -3,8 +3,8 @@ import { pool } from "../config/db.js";
 export const createTileService = async (tileData) => {
   try {
     const result = await pool.query(
-      `INSERT INTO tile_table (name, extent, center, zoom, projection, thubmnailBase64Img)
-            VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO tile_table (name, extent, center, zoom, projection, thubmnailBase64Img, mapSource)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *`,
       [
         tileData.name,
@@ -13,6 +13,7 @@ export const createTileService = async (tileData) => {
         tileData.zoom,
         tileData.projection,
         tileData.thumbnailBase64Img,
+        tileData.mapSource,
       ]
     );
     return result.rows[0];

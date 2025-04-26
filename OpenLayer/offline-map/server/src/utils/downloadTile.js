@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import fs from "fs";
+import path from "path";
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -15,6 +16,12 @@ export async function downloadTile(
     mapSource === "Google Map"
       ? `https://mt1.google.com/vt/lyrs=s&x=${x}&y=${y}&z=${z}` // Google Maps tile URL
       : `https://tile.openstreetmap.org/${z}/${x}/${y}.png`; // OSM tile URL
+
+  // Ensure the output directory exists
+  const outputDir = path.dirname(outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -32,14 +39,15 @@ export async function downloadTile(
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const buffer = await response.buffer();
+      const buffer = await response.arrayBuffer(); // Use arrayBuffer() instead of buffer()
+      const uint8Array = new Uint8Array(buffer);
 
-      const dir = outputPath.substring(0, outputPath.lastIndexOf("/"));
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      // Verify the buffer is actually an image
+      if (uint8Array.length < 100) {
+        throw new Error("Invalid tile data received");
       }
 
-      fs.writeFileSync(outputPath, buffer);
+      fs.writeFileSync(outputPath, uint8Array);
       return;
     } catch (error) {
       console.error(
