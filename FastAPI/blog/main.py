@@ -22,3 +22,8 @@ def create_blog(req: schemas.Blog, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_blog)
     return new_blog
+
+@app.get('/blog', status_code=status.HTTP_200_OK)
+def get_all_blogs(db: Session = Depends(get_db)):
+    blogs = db.query(models.Blog).all()
+    return blogs
