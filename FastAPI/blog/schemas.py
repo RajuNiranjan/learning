@@ -22,3 +22,8 @@ class ShowBlog(BaseModel):
     creator: ShowUser
     class Config:
         from_attributes = True
+
+class Login(BaseModel):
+    username: str
+    password: str
+

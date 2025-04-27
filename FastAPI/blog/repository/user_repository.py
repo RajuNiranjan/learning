@@ -31,3 +31,4 @@ def get_user(id, db:Session):  # Fixed type hint spacing
             detail=f"User with id {id} not found"
         )
     return user
+
