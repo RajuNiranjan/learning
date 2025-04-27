@@ -27,3 +27,10 @@ def create_blog(req: schemas.Blog, db: Session = Depends(get_db)):
 def get_all_blogs(db: Session = Depends(get_db)):
     blogs = db.query(models.Blog).all()
     return blogs
+
+@app.get('/blog/{id}', status_code=status.HTTP_200_OK)
+def get_blog(id: int, db: Session = Depends(get_db)):
+    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
+    if not blog:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found")
+    return blog
