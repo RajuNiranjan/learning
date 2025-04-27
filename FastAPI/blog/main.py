@@ -34,3 +34,23 @@ def get_blog(id: int, db: Session = Depends(get_db)):
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found")
     return blog
+
+@app.delete('/blog/{id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_blog(id:int, db: Session = Depends(get_db)):
+    blog= db.query(models.Blog).filter(models.Blog.id == id).first()
+    if not blog:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found")
+
+    db.delete(blog)
+    db.commit()
+    return 'done'
+
+@app.put('/blog/{id}', status_code=status.HTTP_202_ACCEPTED)
+def update_blog(id:int, req: schemas.Blog, db: Session = Depends(get_db)):
+    blog = db.query(models.Blog).filter(models.Blog.id == id).first()
+    if not blog:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Blog with id {id} not found")
+    blog.title = req.title
+    blog.body = req.body
+    db.commit()
+    return blog
