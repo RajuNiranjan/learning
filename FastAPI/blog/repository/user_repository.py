@@ -1,16 +1,10 @@
-from fastapi import APIRouter, Depends, status, HTTPException
-import schemas, models, hashing, database
 from sqlalchemy.orm import Session
+import models, hashing
+from fastapi import HTTPException, status, Depends
 
 
 
-user_router = APIRouter(
-    prefix='/user',  # Uncommented prefix
-    tags=['users']
-)
-
-@user_router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowUser)  # Updated route
-def create_user(req: schemas.User, db: Session = Depends(database.get_db)):  # Fixed spacing
+def create_user(req, db:Session):  # Fixed spacing
     # Check if email already exists
     existing_user = db.query(models.User).filter(models.User.email == req.email).first()
     if existing_user:
@@ -29,8 +23,7 @@ def create_user(req: schemas.User, db: Session = Depends(database.get_db)):  # F
     db.refresh(new_user)
     return new_user
 
-@user_router.get('/{id}', status_code=status.HTTP_200_OK, response_model=schemas.ShowUser)  # Updated route
-def get_user(id: int, db: Session = Depends(database.get_db)):  # Fixed type hint spacing
+def get_user(id, db:Session):  # Fixed type hint spacing
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
         raise HTTPException(
