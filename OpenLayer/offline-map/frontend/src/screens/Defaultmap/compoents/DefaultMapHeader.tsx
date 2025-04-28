@@ -16,10 +16,11 @@ export const DefaultMapHeader = ({
   onSaveOptionSelect,
   hasDrawnShape,
 }: DefaultMapHeaderProps) => {
-  const [saveSource] = useState("Save");
+  const [saveSource, setSaveSource] = useState("Save");
 
   const handleSaveSourceChange = (value: string) => {
     const option = value === "Save to GCS" ? "GCS" : "DISK";
+    setSaveSource(value);
     onSaveOptionSelect(option);
   };
 

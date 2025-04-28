@@ -12,7 +12,7 @@ import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
 import { DefaultMapHeader } from "./compoents/DefaultMapHeader";
 import { MapAreaTool } from "./compoents/MapAreaTool";
 import { defaults as defaultControls } from "ol/control";
-import { ZoomControls } from "./compoents/ZoomControls";
+import { ZoomControls } from "../../ui-global/ZoomControls";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
 import { DownloadStatusCard } from "./compoents/DownloadStatusCard";
 import XYZ from "ol/source/XYZ";

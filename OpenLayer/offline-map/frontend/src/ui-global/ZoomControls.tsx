@@ -1,16 +1,16 @@
 import React from "react";
-import { ZoomInIcon, ZoomOutIcon } from "../../../assets/assets";
+import { ZoomInIcon, ZoomOutIcon } from "../assets/assets";
 import { Map } from "ol";
 
-interface OfflineMapZoomControlsProps {
+interface ZoomControlsProps {
   mapInstanceRef: React.RefObject<Map>;
   zoomLevel: number;
 }
 
-export const OfflineMapZoomControls = ({
+export const ZoomControls = ({
   mapInstanceRef,
   zoomLevel,
-}: OfflineMapZoomControlsProps) => {
+}: ZoomControlsProps) => {
   const handleZoom = (delta: number) => {
     if (mapInstanceRef.current) {
       const view = mapInstanceRef.current.getView();

@@ -97,6 +97,11 @@ export const downloadTilesGCS = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+    const folderPath = path.join("tiles", folderName);
+    if (fs.existsSync(folderPath)) {
+      fs.rmSync(folderPath, { recursive: true, force: true });
+      console.log(`Removed folder: ${folderPath}`);
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 };

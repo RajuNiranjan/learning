@@ -7,6 +7,8 @@ import { fromLonLat } from "ol/proj";
 import XYZ from "ol/source/XYZ";
 import { Loader } from "../../ui-global/Loader";
 import OlTile from "ol/Tile";
+import { ZoomControls } from "../../ui-global/ZoomControls";
+import { defaults as defaultControls } from "ol/control";
 
 const OfflineMapScreen = () => {
   const { tileId } = useParams();
@@ -16,6 +18,8 @@ const OfflineMapScreen = () => {
     string,
     Record<string, Record<string, string>>
   > | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(16);
+  const mapInstanceRef = useRef<Map | null>(null);
 
   useEffect(() => {
     console.log("Current tileData:", tileData);
@@ -93,20 +97,30 @@ const OfflineMapScreen = () => {
       offlineMap = new Map({
         target: offlineMapRef.current,
         layers: [raster],
+        controls: defaultControls({ zoom: false }),
+
         view: new View({
           center: fromLonLat(tileData.center),
-          zoom: 16,
+          zoom: zoomLevel,
           minZoom: tileData.zoom[0],
           maxZoom: tileData.zoom[1],
           projection: "EPSG:3857",
         }),
       });
 
+      mapInstanceRef.current = offlineMap;
+
       // Add map event listeners for debugging
       offlineMap.on("moveend", () => {
         const view = offlineMap?.getView();
+        const newZoomLevel = view?.getZoom() || zoomLevel;
+        if (newZoomLevel !== undefined) {
+          setZoomLevel(Math.round(newZoomLevel));
+        } else {
+          console.error("Zoom level is undefined");
+        }
         console.log("Map state:", {
-          zoom: view?.getZoom(),
+          zoom: newZoomLevel,
           center: view?.getCenter(),
           resolution: view?.getResolution(),
         });
@@ -116,7 +130,7 @@ const OfflineMapScreen = () => {
         offlineMap?.setTarget(undefined);
       };
     }
-  }, [tileFiles, tileData]);
+  }, [tileFiles, tileData, zoomLevel]);
 
   if (!tileData || !tileFiles) {
     return (
@@ -129,17 +143,25 @@ const OfflineMapScreen = () => {
   return (
     <div className=" bg-[#aad3df] h-screen w-screen">
       <div ref={offlineMapRef} className="h-full w-full bg-[#aad3df]" />
-      <div className="flex items-center gap-2 my-4 absolute top-0 left-20">
+      <div className="flex items-center gap-2 my-4 absolute top-0 left-5">
         <div className="flex items-center gap-2 text-gray-600">
-          <Link to="/map-dashboard" className="hover:text-blue-500">
+          <Link
+            to="/map-dashboard"
+            className="hover:text-blue-500 text-white hover:underline"
+          >
             Dashboard
           </Link>
-          <span>{">"}</span>
-          <span className="text-blue-500">
+          <span className="text-white">{">"}</span>
+          <span className="text-white font-bold hover:underline cursor-default">
             {tileData?.name || "Loading..."}
           </span>
         </div>
       </div>
+
+      <ZoomControls
+        mapInstanceRef={mapInstanceRef as React.RefObject<Map>}
+        zoomLevel={zoomLevel}
+      />
 
       {/* <div className="flex flex-col gap-2 absolute top-20 right-10">
         <div className="bg-white/50 backdrop-blur-sm w-[200px] h-max rounded  p-2">
