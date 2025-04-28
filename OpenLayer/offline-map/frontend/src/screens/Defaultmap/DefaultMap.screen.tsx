@@ -116,9 +116,8 @@ const DefaultMapScreen = () => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 500);
 
-      await fetch(
-        `http://localhost:5000/api/v1/tile/download-tiles/gcs/${zoomLevel}`,
-        {
+      if (selectedSaveOption === "GCS") {
+        await fetch(`/api/v1/tile/download-tiles/gcs/${zoomLevel}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -134,8 +133,26 @@ const DefaultMapScreen = () => {
             projection: projection.getCode(),
             mapSource: currentMapSource,
           }),
-        }
-      );
+        });
+      } else {
+        await fetch(`/api/v1/tile/download-tiles/disk/${zoomLevel}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            folderName,
+            minLon,
+            minLat,
+            maxLon,
+            maxLat,
+            extent,
+            center,
+            projection: projection.getCode(),
+            mapSource: currentMapSource,
+          }),
+        });
+      }
 
       clearInterval(progressInterval);
       setDownloadProgress(100);
@@ -294,7 +311,6 @@ const DefaultMapScreen = () => {
     }
   };
 
-  // Add handler for map source changes
   const handleMapSourceChange = (source: string) => {
     setCurrentMapSource(source);
   };
@@ -320,12 +336,12 @@ const DefaultMapScreen = () => {
         isCompleted={isDownloadComplete}
         onClose={handleDownloadStatusClose}
       />
-      {/* <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} /> */}
       <CustomDialog
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
         <TileDownlodOptionCard
+          selectedSaveOption={selectedSaveOption}
           formData={formData}
           setFormData={setFormData}
           onSubmit={handleDownloadTileFormSubmit}

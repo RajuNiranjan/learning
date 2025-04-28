@@ -23,7 +23,7 @@ export const MapThumbNailCard = () => {
   const fetchTileData = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`http://localhost:5000/api/v1/tile`, {
+      const res = await fetch(`/api/v1/tile`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +44,7 @@ export const MapThumbNailCard = () => {
 
   const handleDeleteTile = async (tileId: number) => {
     try {
-      await fetch(`http://localhost:5000/api/v1/tile/${tileId}`, {
+      await fetch(`/api/v1/tile/${tileId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

@@ -90,6 +90,7 @@ export const downloadTilesGCS = async (req, res) => {
 
     const createdTile = await createTileService(dbData);
 
+    console.log("===== Tiles downloaded successfully =====");
     res.status(200).json({
       message: "Tiles downloaded successfully",
       createdTile,
@@ -188,6 +189,7 @@ export const downloadTilesDisk = async (req, res) => {
     archive.pipe(output);
     archive.directory(baseFolderPath, false);
     archive.finalize();
+    console.log("===== Zip file created successfully =====");
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });

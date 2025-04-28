@@ -1,4 +1,4 @@
-.PHONY: install app dev build api prisma
+.PHONY: install app dev build api prisma build
 
 install i:
 	cd frontend && npm install
@@ -23,4 +23,8 @@ clean:
 prisma:
 	cd server && npx prisma generate
 	cd server && npx prisma migrate dev
+
+build:
+	cd frontend && npm run build
+
 	

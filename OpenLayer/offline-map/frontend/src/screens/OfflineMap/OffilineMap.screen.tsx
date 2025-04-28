@@ -12,7 +12,10 @@ const OfflineMapScreen = () => {
   const { tileId } = useParams();
   const [tileData, setTileData] = useState<Tile | null>(null);
   const offlineMapRef = useRef<HTMLDivElement | null>(null);
-  const [tileFiles, setTileFiles] = useState<Record<string, any> | null>(null);
+  const [tileFiles, setTileFiles] = useState<Record<
+    string,
+    Record<string, Record<string, string>>
+  > | null>(null);
 
   useEffect(() => {
     console.log("Current tileData:", tileData);
@@ -22,7 +25,7 @@ const OfflineMapScreen = () => {
   useEffect(() => {
     const fetchTileData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/v1/tile/${tileId}`);
+        const res = await fetch(`/api/v1/tile/${tileId}`);
         const data = await res.json();
         setTileData(data.tile);
         setTileFiles(data.tileFiles);
@@ -65,9 +68,10 @@ const OfflineMapScreen = () => {
               img.onload = () => {
                 const tileWithImage = imageTile as OlTile & {
                   image_: HTMLImageElement;
+                  changed: () => void;
                 };
                 tileWithImage.image_ = img;
-                (imageTile as any).changed();
+                tileWithImage.changed();
               };
               console.log("Tile found and loaded");
             } else {
@@ -137,7 +141,7 @@ const OfflineMapScreen = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 absolute top-20 right-10">
+      {/* <div className="flex flex-col gap-2 absolute top-20 right-10">
         <div className="bg-white/50 backdrop-blur-sm w-[200px] h-max rounded  p-2">
           <h1 className="text-lg font-bold">Extent</h1>
           <div className="flex flex-col gap-2">
@@ -183,7 +187,7 @@ const OfflineMapScreen = () => {
             {tileData?.projection}
           </p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

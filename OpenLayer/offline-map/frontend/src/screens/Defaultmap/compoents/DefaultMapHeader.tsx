@@ -19,7 +19,8 @@ export const DefaultMapHeader = ({
   const [saveSource] = useState("Save");
 
   const handleSaveSourceChange = (value: string) => {
-    onSaveOptionSelect(value);
+    const option = value === "Save to GCS" ? "GCS" : "DISK";
+    onSaveOptionSelect(option);
   };
 
   return (

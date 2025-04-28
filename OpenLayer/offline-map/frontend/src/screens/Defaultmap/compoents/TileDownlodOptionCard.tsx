@@ -2,17 +2,19 @@ import { useState } from "react";
 import { FormData } from "../DefaultMap.screen";
 
 export const TileDownlodOptionCard = ({
+  selectedSaveOption,
   formData,
   setFormData,
   onSubmit,
   isDownloading,
   onClose, // Add onClose prop to handle dialog close
 }: {
+  selectedSaveOption: string | null;
   formData: FormData;
   setFormData: (data: FormData) => void;
   onSubmit: (data: FormData) => void;
   isDownloading: boolean;
-  onClose: () => void; // Define onClose prop type
+  onClose: () => void;
 }) => {
   const [folderName, setFolderName] = useState<string>(formData.folderName);
   console.log("isDownloading", isDownloading);
@@ -34,7 +36,7 @@ export const TileDownlodOptionCard = ({
   return (
     <div className="w-[36.0625rem] h-[10rem]  bg-[#333] py-[1rem] px-[1.5rem] rounded-[0.5rem] space-y-[1rem]">
       <h1 className="h-[1.25rem] text[0.875rem] font-medium leading-[0.875rem] tracking-[0.00625rem] text-[#FFF] ">
-        Save to GCS
+        {selectedSaveOption === "GCS" ? "Save to GCS" : "Save to Disk"}
       </h1>
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-[1rem]">
         <div className="flex items-center h-[3.25rem] gap-[1rem]">
