@@ -9,14 +9,15 @@ import { CoordianteCard } from "./compoents/CoordianteCard";
 import Draw, { createBox } from "ol/interaction/Draw";
 import { Polygon } from "ol/geom";
 import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
-import { axiosInstance } from "../../utils/axiosInstance";
 import { DefaultMapHeader } from "./compoents/DefaultMapHeader";
 import { MapAreaTool } from "./compoents/MapAreaTool";
 import { defaults as defaultControls } from "ol/control";
-import { ZoomControls } from "./compoents/ZoomControls";
+import { ZoomControls } from "../../ui-global/ZoomControls";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
 import { DownloadStatusCard } from "./compoents/DownloadStatusCard";
 import XYZ from "ol/source/XYZ";
+import Style from "ol/style/Style";
+import Stroke from "ol/style/Stroke";
 
 type Coordinates = {
   lat: number;
@@ -50,12 +51,19 @@ const DefaultMapScreen = () => {
   const [selectedSaveOption, setSelectedSaveOption] = useState<string | null>(
     null
   );
+  console.log("selectedSaveOption", selectedSaveOption);
+
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloadComplete, setIsDownloadComplete] = useState(false);
   const [showDownloadStatus, setShowDownloadStatus] = useState(false);
   const [currentMapSource, setCurrentMapSource] = useState<string>("OSM Map");
 
-  console.log("currentMapSource", currentMapSource);
+  const style = new Style({
+    stroke: new Stroke({
+      color: "#909093",
+      width: 2,
+    }),
+  });
 
   if (error) {
     console.log(error);
@@ -108,19 +116,43 @@ const DefaultMapScreen = () => {
         setDownloadProgress((prev) => Math.min(prev + 10, 90));
       }, 500);
 
-      console.log("currentMapSource", currentMapSource);
-
-      await axiosInstance.post(`/api/v1/tile/download-tiles/${zoomLevel}`, {
-        folderName,
-        minLon,
-        minLat,
-        maxLon,
-        maxLat,
-        extent,
-        center,
-        projection: projection.getCode(),
-        mapSource: currentMapSource,
-      });
+      if (selectedSaveOption === "GCS") {
+        await fetch(`/api/v1/tile/download-tiles/gcs/${zoomLevel}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            folderName,
+            minLon,
+            minLat,
+            maxLon,
+            maxLat,
+            extent,
+            center,
+            projection: projection.getCode(),
+            mapSource: currentMapSource,
+          }),
+        });
+      } else {
+        await fetch(`/api/v1/tile/download-tiles/disk/${zoomLevel}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            folderName,
+            minLon,
+            minLat,
+            maxLon,
+            maxLat,
+            extent,
+            center,
+            projection: projection.getCode(),
+            mapSource: currentMapSource,
+          }),
+        });
+      }
 
       clearInterval(progressInterval);
       setDownloadProgress(100);
@@ -167,6 +199,7 @@ const DefaultMapScreen = () => {
 
     const vector = new VectorLayer({
       source: vectorSourceRef.current,
+      style,
     });
 
     if (mapRef.current) {
@@ -278,7 +311,6 @@ const DefaultMapScreen = () => {
     }
   };
 
-  // Add handler for map source changes
   const handleMapSourceChange = (source: string) => {
     setCurrentMapSource(source);
   };
@@ -304,12 +336,12 @@ const DefaultMapScreen = () => {
         isCompleted={isDownloadComplete}
         onClose={handleDownloadStatusClose}
       />
-      {/* <DrawOption isDrawShape={isDrawShape} setIsDrawShape={setIsDrawShape} /> */}
       <CustomDialog
         isOpen={isDownloadTileDialogOpen}
         onClose={handleDialogClose}
       >
         <TileDownlodOptionCard
+          selectedSaveOption={selectedSaveOption}
           formData={formData}
           setFormData={setFormData}
           onSubmit={handleDownloadTileFormSubmit}

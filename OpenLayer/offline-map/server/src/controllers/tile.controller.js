@@ -8,8 +8,15 @@ import {
   getTileByIdService,
   getTileService,
 } from "../models/tile.model.js";
+import os from "os";
+import archiver from "archiver";
 
-export const downloadTiles = async (req, res) => {
+/**
+ * Download the tiles from the GCS bucket and save it to the local machine
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
+export const downloadTilesGCS = async (req, res) => {
   const {
     folderName,
     minLon,
@@ -22,7 +29,7 @@ export const downloadTiles = async (req, res) => {
     mapSource,
   } = req.body;
   const MIN_ZOOM = 10;
-  const MAX_ZOOM = 17;
+  const MAX_ZOOM = 18;
   const zoomLevel = req.params.zoomLevel;
 
   try {
@@ -83,16 +90,122 @@ export const downloadTiles = async (req, res) => {
 
     const createdTile = await createTileService(dbData);
 
+    console.log("===== Tiles downloaded successfully =====");
     res.status(200).json({
       message: "Tiles downloaded successfully",
       createdTile,
     });
   } catch (error) {
     console.log(error);
+    const folderPath = path.join("tiles", folderName);
+    if (fs.existsSync(folderPath)) {
+      fs.rmSync(folderPath, { recursive: true, force: true });
+      console.log(`Removed folder: ${folderPath}`);
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
+/**
+ * Download the tiles from the local machine and save it to the local machine as zip file
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
+export const downloadTilesDisk = async (req, res) => {
+  const {
+    folderName,
+    minLon,
+    minLat,
+    maxLon,
+    maxLat,
+    extent,
+    center,
+    projection,
+    mapSource,
+  } = req.body;
+  const MIN_ZOOM = 10;
+  const MAX_ZOOM = 18;
+  const zoomLevel = req.params.zoomLevel;
+
+  try {
+    const downloadsPath = path.join(os.homedir(), "Downloads");
+    const baseFolderPath = path.join(downloadsPath, folderName);
+    const tilesFolderPath = path.join(baseFolderPath, `${folderName}_tiles`);
+    const jsonFilePath = path.join(baseFolderPath, `${folderName}.json`);
+
+    ensureDirSync(fs, tilesFolderPath);
+
+    const jsonData = {
+      folderName,
+      minLon,
+      minLat,
+      maxLon,
+      maxLat,
+      extent,
+      center,
+      projection,
+      mapSource,
+      zoomLevel,
+    };
+
+    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
+
+    for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
+      const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
+      const bottomRightTile = lonLatToTile(maxLon, minLat, zoom);
+
+      for (let x = topLeftTile.x; x <= bottomRightTile.x; x++) {
+        for (let y = topLeftTile.y; y <= bottomRightTile.y; y++) {
+          const dirPath = path.join(
+            tilesFolderPath,
+            zoom.toString(),
+            x.toString()
+          );
+          ensureDirSync(fs, dirPath);
+
+          const outputPath = path.join(dirPath, `${y}.png`);
+          if (!fs.existsSync(outputPath)) {
+            console.log(`Downloading tile ${zoom}/${x}/${y}`);
+            await downloadTile(zoom, x, y, outputPath, mapSource);
+            console.log(`Tile ${zoom}/${x}/${y} downloaded successfully`);
+          }
+        }
+      }
+    }
+
+    const zipFilePath = path.join(downloadsPath, `${folderName}.zip`);
+    const output = fs.createWriteStream(zipFilePath);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    output.on("close", () => {
+      res.download(zipFilePath, `${folderName}.zip`, (err) => {
+        if (err) {
+          console.log("Error sending file:", err);
+          res.status(500).json({ error: "Failed to send zip file" });
+        }
+        fs.rmSync(baseFolderPath, { recursive: true, force: true });
+      });
+    });
+
+    archive.on("error", (err) => {
+      throw err;
+    });
+
+    archive.pipe(output);
+    archive.directory(baseFolderPath, false);
+    archive.finalize();
+    console.log("===== Zip file created successfully =====");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Get all the tiles from the database
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
 export const getAllTiles = async (req, res) => {
   try {
     const tiles = await getTileService();
@@ -103,6 +216,11 @@ export const getAllTiles = async (req, res) => {
   }
 };
 
+/**
+ * Get the tile by the id from the database
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
 export const getTileById = async (req, res) => {
   try {
     const tileId = req.params.id;
@@ -156,6 +274,11 @@ export const getTileById = async (req, res) => {
   }
 };
 
+/**
+ * Delete the tile by the id from the database
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
 export const deleteTile = async (req, res) => {
   try {
     const tileId = req.params.id;
@@ -165,7 +288,7 @@ export const deleteTile = async (req, res) => {
     }
     const tileFolderPath = path.join("tiles", tile.name);
     if (fs.existsSync(tileFolderPath)) {
-      fs.rmdirSync(tileFolderPath, { recursive: true });
+      fs.rmSync(tileFolderPath, { recursive: true, force: true });
     }
     res.status(200).json({
       message: "Tile and its folder deleted successfully",
