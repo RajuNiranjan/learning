@@ -1,6 +1,7 @@
 import express from "express";
 import {
-  downloadTiles,
+  downloadTilesGCS,
+  downloadTilesDisk,
   getAllTiles,
   getTileById,
   deleteTile,
@@ -8,7 +9,8 @@ import {
 
 export const tileRouter = express.Router();
 
-tileRouter.post("/download-tiles/:zoomLevel", downloadTiles);
+tileRouter.post("/download-tiles/gcs/:zoomLevel", downloadTilesGCS);
+tileRouter.post("/download-tiles/disk/:zoomLevel", downloadTilesDisk);
 tileRouter.get("/", getAllTiles);
 tileRouter.get("/:id", getTileById);
 tileRouter.delete("/:id", deleteTile);

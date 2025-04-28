@@ -26,7 +26,6 @@ app.get("/", (req, res) => {
     message: "Hello World",
   });
 });
-
 app.get("/api/v1/test-pool", async (req, res) => {
   try {
     const result = await pool.query("SELECT current_database()");

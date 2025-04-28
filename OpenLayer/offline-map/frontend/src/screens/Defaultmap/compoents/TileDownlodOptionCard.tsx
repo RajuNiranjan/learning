@@ -15,6 +15,7 @@ export const TileDownlodOptionCard = ({
   onClose: () => void; // Define onClose prop type
 }) => {
   const [folderName, setFolderName] = useState<string>(formData.folderName);
+  console.log("isDownloading", isDownloading);
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { axiosInstance } from "../../utils/axiosInstance";
 import { Tile } from "../MapDashBoard/components/MapThumbNailCard";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import { fromLonLat } from "ol/proj";
 import XYZ from "ol/source/XYZ";
 import { Loader } from "../../ui-global/Loader";
+import OlTile from "ol/Tile";
 
 const OfflineMapScreen = () => {
   const { tileId } = useParams();
@@ -22,9 +22,10 @@ const OfflineMapScreen = () => {
   useEffect(() => {
     const fetchTileData = async () => {
       try {
-        const res = await axiosInstance.get(`/api/v1/tile/${tileId}`);
-        setTileData(res.data.tile);
-        setTileFiles(res.data.tileFiles);
+        const res = await fetch(`http://localhost:5000/api/v1/tile/${tileId}`);
+        const data = await res.json();
+        setTileData(data.tile);
+        setTileFiles(data.tileFiles);
       } catch (error) {
         console.error("Error fetching tile data:", error);
       }
@@ -46,7 +47,7 @@ const OfflineMapScreen = () => {
       });
 
       const customTileSource = new XYZ({
-        tileLoadFunction: (imageTile, src) => {
+        tileLoadFunction: (imageTile: OlTile) => {
           const tileCoord = imageTile.getTileCoord();
           if (!tileCoord) return;
 
@@ -54,21 +55,28 @@ const OfflineMapScreen = () => {
           const x = String(tileCoord[1]);
           const y = String(tileCoord[2]);
 
-          console.log("Loading tile:", { z, x, y }); // Debug log
+          console.log("Loading tile:", { z, x, y });
 
           try {
             if (tileFiles[z]?.[x]?.[y]) {
-              const img = imageTile.getImage() as HTMLImageElement;
+              imageTile.setState(2); // LOADED
+              const img = new Image();
               img.src = `data:image/png;base64,${tileFiles[z][x][y]}`;
-              console.log("Tile found and loaded"); // Debug log
+              img.onload = () => {
+                const tileWithImage = imageTile as OlTile & {
+                  image_: HTMLImageElement;
+                };
+                tileWithImage.image_ = img;
+                (imageTile as any).changed();
+              };
+              console.log("Tile found and loaded");
             } else {
-              console.log("Tile not found in cache"); // Debug log
-              const img = imageTile.getImage() as HTMLImageElement;
-              img.src =
-                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+              imageTile.setState(3); // ERROR
+              console.log("Tile not found in cache");
             }
           } catch (error) {
             console.error("Error loading tile:", error);
+            imageTile.setState(3); // ERROR
           }
         },
         url: "dummy/{z}/{x}/{y}",
