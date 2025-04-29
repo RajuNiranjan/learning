@@ -103,6 +103,7 @@ export const MapThumbNailCard = () => {
             <img
               src={`data:image/png;base64,${tile?.thubmnailbase64img}`}
               alt="map-thumbnail"
+              loading="lazy"
               className="w-full h-[16rem] object-cover rounded mb-[0.75rem]"
             />
             <div className="flex justify-between items-center">

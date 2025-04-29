@@ -6,7 +6,6 @@ import TileLayer from "ol/layer/Tile";
 import { fromLonLat } from "ol/proj";
 import XYZ from "ol/source/XYZ";
 import { Loader } from "../../ui-global/Loader";
-import OlTile from "ol/Tile";
 import { ZoomControls } from "../../ui-global/ZoomControls";
 import { defaults as defaultControls } from "ol/control";
 
