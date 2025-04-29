@@ -33,6 +33,18 @@ export type FormData = {
   maxLat: number;
 };
 
+// Add these helpers at the top of your component
+const persistDownloadState = (state) => {
+  localStorage.setItem("downloadState", JSON.stringify(state));
+};
+const getPersistedDownloadState = () => {
+  const state = localStorage.getItem("downloadState");
+  return state ? JSON.parse(state) : null;
+};
+const clearPersistedDownloadState = () => {
+  localStorage.removeItem("downloadState");
+};
+
 const DefaultMapScreen = () => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const vectorSourceRef = useRef<VectorSource>(new VectorSource());
@@ -114,6 +126,14 @@ const DefaultMapScreen = () => {
       setIsDownloadTileDialogOpen(false);
       setShowDownloadStatus(true);
 
+      // Persist state at the start of download
+      persistDownloadState({
+        isDownloading: true,
+        showDownloadStatus: true,
+        downloadProgress: 0,
+        isDownloadComplete: false,
+      });
+
       const extent = [minLon, minLat, maxLon, maxLat];
       const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
 
@@ -162,6 +182,8 @@ const DefaultMapScreen = () => {
       setShowDownloadStatus(false);
     } finally {
       setIsDownloading(false);
+      // Clear persisted state when done
+      clearPersistedDownloadState();
     }
   };
 
@@ -169,6 +191,7 @@ const DefaultMapScreen = () => {
     setShowDownloadStatus(false);
     setDownloadProgress(0);
     setIsDownloadComplete(false);
+    clearPersistedDownloadState();
     if (currentFeature) {
       vectorSourceRef.current.removeFeature(currentFeature);
       setCurrentFeature(null);
@@ -363,12 +386,47 @@ const DefaultMapScreen = () => {
     };
   }, []);
 
-  // Add this useEffect to auto-close DownloadStatusCard after 3 seconds
+  // Restore download state on mount
+  useEffect(() => {
+    const persisted = getPersistedDownloadState();
+    if (persisted && persisted.isDownloading) {
+      setShowDownloadStatus(true);
+      setIsDownloading(true);
+      setDownloadProgress(persisted.downloadProgress || 0);
+      setIsDownloadComplete(false);
+      // Optionally: restore folderName, etc.
+    }
+  }, []);
+
+  // Persist state on change
+  useEffect(() => {
+    persistDownloadState({
+      isDownloading,
+      showDownloadStatus,
+      downloadProgress,
+      isDownloadComplete,
+      // Add folderName or other info if needed
+    });
+  }, [isDownloading, showDownloadStatus, downloadProgress, isDownloadComplete]);
+
+  // On socket connect, if a download is in progress, re-emit a "resume" event
+  useEffect(() => {
+    if (socket && isDownloading) {
+      const persisted = getPersistedDownloadState();
+      if (persisted && persisted.folderName) {
+        socket.emit("resumeDownloadProgress", {
+          folderName: persisted.folderName,
+        });
+      }
+    }
+  }, [socket, isDownloading]);
+
+  // Remove or increase the auto-close timer (optional)
   useEffect(() => {
     if (isDownloadComplete) {
       const timer = setTimeout(() => {
         handleDownloadStatusClose();
-      }, 1000);
+      }, 3000); // 3 seconds instead of 1, or remove this effect entirely
       return () => clearTimeout(timer);
     }
   }, [isDownloadComplete]);
