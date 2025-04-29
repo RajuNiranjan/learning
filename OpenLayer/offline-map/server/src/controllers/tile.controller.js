@@ -31,6 +31,7 @@ export const downloadTilesGCS = async (req, res) => {
   const MIN_ZOOM = 10;
   const MAX_ZOOM = 18;
   const zoomLevel = req.params.zoomLevel;
+  const socketId = req.body.socketId;
 
   try {
     const thumbnailTile = lonLatToTile(center[0], center[1], zoomLevel);
@@ -51,6 +52,17 @@ export const downloadTilesGCS = async (req, res) => {
       mapSource
     );
 
+    let totalTiles = 0;
+    let downloadedTiles = 0;
+
+    for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
+      const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
+      const bottomRightTile = lonLatToTile(maxLon, minLat, zoom);
+      totalTiles +=
+        (bottomRightTile.x - topLeftTile.x + 1) *
+        (bottomRightTile.y - topLeftTile.y + 1);
+    }
+
     for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
       const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
       const bottomRightTile = lonLatToTile(maxLon, minLat, zoom);
@@ -70,6 +82,17 @@ export const downloadTilesGCS = async (req, res) => {
             console.log(`Downloading tile ${zoom}/${x}/${y}`);
             await downloadTile(zoom, x, y, outputPath, mapSource);
             console.log(`Tile ${zoom}/${x}/${y} downloaded successfully`);
+            downloadedTiles++;
+            if (req.app.get("io") && socketId) {
+              req.app
+                .get("io")
+                .to(socketId)
+                .emit("downloadProgress", {
+                  progress: Math.round((downloadedTiles / totalTiles) * 100),
+                  downloadedTiles,
+                  totalTiles,
+                });
+            }
           }
         }
       }
@@ -126,6 +149,7 @@ export const downloadTilesDisk = async (req, res) => {
   const MIN_ZOOM = 10;
   const MAX_ZOOM = 18;
   const zoomLevel = req.params.zoomLevel;
+  const socketId = req.body.socketId;
 
   try {
     const downloadsPath = path.join(os.homedir(), "Downloads");
@@ -150,6 +174,17 @@ export const downloadTilesDisk = async (req, res) => {
 
     fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
 
+    let totalTiles = 0;
+    let downloadedTiles = 0;
+
+    for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
+      const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
+      const bottomRightTile = lonLatToTile(maxLon, minLat, zoom);
+      totalTiles +=
+        (bottomRightTile.x - topLeftTile.x + 1) *
+        (bottomRightTile.y - topLeftTile.y + 1);
+    }
+
     for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
       const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
       const bottomRightTile = lonLatToTile(maxLon, minLat, zoom);
@@ -168,6 +203,17 @@ export const downloadTilesDisk = async (req, res) => {
             console.log(`Downloading tile ${zoom}/${x}/${y}`);
             await downloadTile(zoom, x, y, outputPath, mapSource);
             console.log(`Tile ${zoom}/${x}/${y} downloaded successfully`);
+            downloadedTiles++;
+            if (req.app.get("io") && socketId) {
+              req.app
+                .get("io")
+                .to(socketId)
+                .emit("downloadProgress", {
+                  progress: Math.round((downloadedTiles / totalTiles) * 100),
+                  downloadedTiles,
+                  totalTiles,
+                });
+            }
           }
         }
       }
@@ -201,24 +247,35 @@ export const downloadTilesDisk = async (req, res) => {
   }
 };
 
+/**
+ * Cancel the download of the tiles
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
 export const cancelDownload = async (req, res) => {
   try {
     const { folderName } = req.body;
     const tilesFolderPath = path.join("tiles", folderName);
 
+    if (!folderName) {
+      return res.status(400).json({ error: "Folder name is required" });
+    }
+
     if (fs.existsSync(tilesFolderPath)) {
       fs.rmSync(tilesFolderPath, { recursive: true, force: true });
-      res.status(200).json({ message: "Download canceled and folder removed" });
+      console.log("==== Download Canceled ====");
+      return res
+        .status(200)
+        .json({ message: "Download canceled and folder removed" });
     } else {
-      res.status(404).json({ error: "Folder not found" });
+      return res.status(404).json({ error: "Folder not found" });
     }
-    res.status(200).json({ message: "Download canceled and folder removed" });
-    console.log("==== Download Canceled ====");
   } catch (error) {
-    console.log(error);
+    console.error("Error in cancelDownload:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 /**
  * Get all the tiles from the database
  * @param {Object} req - The request object containing parameters and body data
@@ -242,50 +299,11 @@ export const getAllTiles = async (req, res) => {
 export const getTileById = async (req, res) => {
   try {
     const tileId = req.params.id;
-
     const tile = await getTileByIdService(tileId);
-
     if (!tile) {
       return res.status(404).json({ error: "Tile not found" });
     }
-
-    const tileFolderPath = path.join("tiles", tile.name);
-    const tileFiles = {};
-
-    for (let zoom = tile.zoom[0]; zoom <= tile.zoom[1]; zoom++) {
-      const zoomPath = path.join(tileFolderPath, zoom.toString());
-      if (fs.existsSync(zoomPath)) {
-        tileFiles[zoom] = {};
-
-        const xDirs = fs
-          .readdirSync(zoomPath)
-          .filter((file) => !file.startsWith("."));
-
-        for (const x of xDirs) {
-          const xPath = path.join(zoomPath, x);
-          if (fs.statSync(xPath).isDirectory()) {
-            tileFiles[zoom][x] = {};
-
-            const yFiles = fs
-              .readdirSync(xPath)
-              .filter((file) => file.endsWith(".png"))
-              .map((file) => file.replace(".png", ""));
-
-            for (const y of yFiles) {
-              const tilePath = path.join(xPath, `${y}.png`);
-              const tileBuffer = fs.readFileSync(tilePath);
-              const tileBase64 = tileBuffer.toString("base64");
-              tileFiles[zoom][x][y] = tileBase64;
-            }
-          }
-        }
-      }
-    }
-
-    res.status(200).json({
-      tile,
-      tileFiles,
-    });
+    res.status(200).json({ tile });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
@@ -315,5 +333,29 @@ export const deleteTile = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Serve a single tile image as PNG
+ * @param {Object} req - The request object containing parameters and body data
+ * @param {Object} res - The response object used to send back the desired HTTP response
+ */
+export const getTileImage = async (req, res) => {
+  try {
+    const { tileId, z, x, y } = req.params;
+    const tile = await getTileByIdService(tileId);
+    if (!tile) {
+      return res.status(404).send("Tile not found");
+    }
+    const tilePath = path.join("tiles", tile.name, z, x, `${y}.png`);
+    if (!fs.existsSync(tilePath)) {
+      return res.status(404).send("Tile image not found");
+    }
+    res.setHeader("Content-Type", "image/png");
+    fs.createReadStream(tilePath).pipe(res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
   }
 };

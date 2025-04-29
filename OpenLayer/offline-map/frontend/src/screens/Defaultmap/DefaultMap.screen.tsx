@@ -18,6 +18,7 @@ import { DownloadStatusCard } from "./components/DownloadStatusCard";
 import XYZ from "ol/source/XYZ";
 import Style from "ol/style/Style";
 import Stroke from "ol/style/Stroke";
+import io, { Socket } from "socket.io-client";
 
 type Coordinates = {
   lat: number;
@@ -57,6 +58,10 @@ const DefaultMapScreen = () => {
   const [isDownloadComplete, setIsDownloadComplete] = useState(false);
   const [showDownloadStatus, setShowDownloadStatus] = useState(false);
   const [currentMapSource, setCurrentMapSource] = useState<string>("OSM Map");
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socketId, setSocketId] = useState<string | null>(null);
+
+  console.log("downloadProgress", downloadProgress);
 
   const style = new Style({
     stroke: new Stroke({
@@ -101,7 +106,7 @@ const DefaultMapScreen = () => {
    * @returns void
    */
   const handleDownloadTileFormSubmit = async (data: FormData) => {
-    const { folderName, minLon, minLat, maxLon, maxLat } = data;
+    const { minLon, minLat, maxLon, maxLat } = data;
 
     try {
       setIsDownloading(true);
@@ -123,15 +128,12 @@ const DefaultMapScreen = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            folderName,
-            minLon,
-            minLat,
-            maxLon,
-            maxLat,
+            ...data,
             extent,
             center,
             projection: projection.getCode(),
             mapSource: currentMapSource,
+            socketId,
           }),
         });
       } else {
@@ -141,15 +143,12 @@ const DefaultMapScreen = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            folderName,
-            minLon,
-            minLat,
-            maxLon,
-            maxLat,
+            ...data,
             extent,
             center,
             projection: projection.getCode(),
             mapSource: currentMapSource,
+            socketId,
           }),
         });
       }
@@ -327,16 +326,52 @@ const DefaultMapScreen = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to cancel download");
-      }
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result.message);
 
-      const result = await response.json();
-      console.log(result.message);
+        // Only close and reset if response is OK
+        setShowDownloadStatus(false);
+        setIsDownloading(false);
+        setDownloadProgress(0);
+        setIsDownloadComplete(false);
+      } else {
+        // Optionally, you can show an error message here
+        const errorResult = await response.json();
+        console.error("Cancel failed:", errorResult.error);
+      }
     } catch (error) {
       console.error("Error canceling download:", error);
     }
   };
+
+  useEffect(() => {
+    const newSocket = io("http://localhost:5000"); // Replace with your server URL/port
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      setSocketId(newSocket.id || null);
+    });
+
+    newSocket.on("downloadProgress", (data) => {
+      setDownloadProgress(data.progress);
+      setShowDownloadStatus(true);
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  // Add this useEffect to auto-close DownloadStatusCard after 3 seconds
+  useEffect(() => {
+    if (isDownloadComplete) {
+      const timer = setTimeout(() => {
+        handleDownloadStatusClose();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isDownloadComplete]);
 
   return (
     <div className="w-screen h-screen ">

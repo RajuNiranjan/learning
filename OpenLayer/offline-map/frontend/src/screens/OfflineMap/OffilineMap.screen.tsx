@@ -14,17 +14,8 @@ const OfflineMapScreen = () => {
   const { tileId } = useParams();
   const [tileData, setTileData] = useState<Tile | null>(null);
   const offlineMapRef = useRef<HTMLDivElement | null>(null);
-  const [tileFiles, setTileFiles] = useState<Record<
-    string,
-    Record<string, Record<string, string>>
-  > | null>(null);
   const [zoomLevel, setZoomLevel] = useState(16);
   const mapInstanceRef = useRef<Map | null>(null);
-
-  useEffect(() => {
-    console.log("Current tileData:", tileData);
-    console.log("Current tileFiles structure:", tileFiles);
-  }, [tileData, tileFiles]);
 
   useEffect(() => {
     const fetchTileData = async () => {
@@ -32,7 +23,6 @@ const OfflineMapScreen = () => {
         const res = await fetch(`/api/v1/tile/${tileId}`);
         const data = await res.json();
         setTileData(data.tile);
-        setTileFiles(data.tileFiles);
       } catch (error) {
         console.error("Error fetching tile data:", error);
       }
@@ -46,48 +36,11 @@ const OfflineMapScreen = () => {
   useEffect(() => {
     let offlineMap: Map | undefined;
 
-    if (offlineMapRef.current && tileFiles && tileData) {
-      console.log("Initializing map with:", {
-        center: tileData.center,
-        zoom: tileData.zoom,
-        extent: tileData.extent,
-      });
+    if (offlineMapRef.current && tileData) {
+      const tileUrl = `/api/v1/tile/${tileId}/{z}/{x}/{y}.png`;
 
       const customTileSource = new XYZ({
-        tileLoadFunction: (imageTile: OlTile) => {
-          const tileCoord = imageTile.getTileCoord();
-          if (!tileCoord) return;
-
-          const z = String(tileCoord[0]);
-          const x = String(tileCoord[1]);
-          const y = String(tileCoord[2]);
-
-          console.log("Loading tile:", { z, x, y });
-
-          try {
-            if (tileFiles[z]?.[x]?.[y]) {
-              imageTile.setState(2); // LOADED
-              const img = new Image();
-              img.src = `data:image/png;base64,${tileFiles[z][x][y]}`;
-              img.onload = () => {
-                const tileWithImage = imageTile as OlTile & {
-                  image_: HTMLImageElement;
-                  changed: () => void;
-                };
-                tileWithImage.image_ = img;
-                tileWithImage.changed();
-              };
-              console.log("Tile found and loaded");
-            } else {
-              imageTile.setState(3); // ERROR
-              console.log("Tile not found in cache");
-            }
-          } catch (error) {
-            console.error("Error loading tile:", error);
-            imageTile.setState(3); // ERROR
-          }
-        },
-        url: "dummy/{z}/{x}/{y}",
+        url: tileUrl,
       });
 
       const raster = new TileLayer({
@@ -98,41 +51,32 @@ const OfflineMapScreen = () => {
         target: offlineMapRef.current,
         layers: [raster],
         controls: defaultControls({ zoom: false }),
-
         view: new View({
           center: fromLonLat(tileData.center),
           zoom: zoomLevel,
           minZoom: tileData.zoom[0],
           maxZoom: tileData.zoom[1],
-          projection: "EPSG:3857",
+          projection: tileData.projection,
         }),
       });
 
       mapInstanceRef.current = offlineMap;
 
-      // Add map event listeners for debugging
       offlineMap.on("moveend", () => {
         const view = offlineMap?.getView();
         const newZoomLevel = view?.getZoom() || zoomLevel;
         if (newZoomLevel !== undefined) {
           setZoomLevel(Math.round(newZoomLevel));
-        } else {
-          console.error("Zoom level is undefined");
         }
-        console.log("Map state:", {
-          zoom: newZoomLevel,
-          center: view?.getCenter(),
-          resolution: view?.getResolution(),
-        });
       });
 
       return () => {
         offlineMap?.setTarget(undefined);
       };
     }
-  }, [tileFiles, tileData, zoomLevel]);
+  }, [tileData, zoomLevel]);
 
-  if (!tileData || !tileFiles) {
+  if (!tileData) {
     return (
       <div className="flex items-center justify-center h-screen w-screen">
         <Loader />
