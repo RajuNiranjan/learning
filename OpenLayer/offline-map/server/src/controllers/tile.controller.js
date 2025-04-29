@@ -201,6 +201,24 @@ export const downloadTilesDisk = async (req, res) => {
   }
 };
 
+export const cancelDownload = async (req, res) => {
+  try {
+    const { folderName } = req.body;
+    const tilesFolderPath = path.join("tiles", folderName);
+
+    if (fs.existsSync(tilesFolderPath)) {
+      fs.rmSync(tilesFolderPath, { recursive: true, force: true });
+      res.status(200).json({ message: "Download canceled and folder removed" });
+    } else {
+      res.status(404).json({ error: "Folder not found" });
+    }
+    res.status(200).json({ message: "Download canceled and folder removed" });
+    console.log("==== Download Canceled ====");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 /**
  * Get all the tiles from the database
  * @param {Object} req - The request object containing parameters and body data

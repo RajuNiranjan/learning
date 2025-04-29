@@ -5,16 +5,16 @@ import { fromLonLat, Projection, toLonLat } from "ol/proj";
 import { OSM } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { useEffect, useRef, useState } from "react";
-import { CoordianteCard } from "./compoents/CoordianteCard";
+import { CoordianteCard } from "./components/CoordianteCard";
 import Draw, { createBox } from "ol/interaction/Draw";
 import { Polygon } from "ol/geom";
-import { TileDownlodOptionCard } from "./compoents/TileDownlodOptionCard";
-import { DefaultMapHeader } from "./compoents/DefaultMapHeader";
-import { MapAreaTool } from "./compoents/MapAreaTool";
+import { TileDownlodOptionCard } from "./components/TileDownlodOptionCard";
+import { DefaultMapHeader } from "./components/DefaultMapHeader";
+import { MapAreaTool } from "./components/MapAreaTool";
 import { defaults as defaultControls } from "ol/control";
 import { ZoomControls } from "../../ui-global/ZoomControls";
 import { CustomDialog } from "../../ui-global/CustomeDialog";
-import { DownloadStatusCard } from "./compoents/DownloadStatusCard";
+import { DownloadStatusCard } from "./components/DownloadStatusCard";
 import XYZ from "ol/source/XYZ";
 import Style from "ol/style/Style";
 import Stroke from "ol/style/Stroke";
@@ -315,6 +315,29 @@ const DefaultMapScreen = () => {
     setCurrentMapSource(source);
   };
 
+  const handleCancelDownload = async () => {
+    try {
+      const response = await fetch("/api/v1/tile/cancel-download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          folderName: formData.folderName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to cancel download");
+      }
+
+      const result = await response.json();
+      console.log(result.message);
+    } catch (error) {
+      console.error("Error canceling download:", error);
+    }
+  };
+
   return (
     <div className="w-screen h-screen ">
       <DefaultMapHeader
@@ -335,6 +358,7 @@ const DefaultMapScreen = () => {
         progress={downloadProgress}
         isCompleted={isDownloadComplete}
         onClose={handleDownloadStatusClose}
+        onCancelDownload={handleCancelDownload}
       />
       <CustomDialog
         isOpen={isDownloadTileDialogOpen}
