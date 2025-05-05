@@ -87,7 +87,10 @@ const OfflineMapScreen = () => {
   return (
     <div className=" bg-[#aad3df] h-screen w-screen">
       <OfflineMapHeader tileData={tileData} />
-      <div ref={offlineMapRef} className="h-full w-full bg-[#aad3df]" />
+      <div
+        ref={offlineMapRef}
+        className="h-[calc(100vh-5rem)] w-full bg-[#aad3df]"
+      />
 
       <ZoomControls
         mapInstanceRef={mapInstanceRef as React.RefObject<Map>}
