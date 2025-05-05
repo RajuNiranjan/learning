@@ -165,20 +165,38 @@ const DefaultMapScreen = () => {
           }),
         });
       } else {
-        await fetch(`/api/v1/tile/download-tiles/disk/${zoomLevel}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...data,
-            extent,
-            center,
-            projection: projection.getCode(),
-            mapSource: currentMapSource,
-            socketId,
-          }),
-        });
+        const res = await fetch(
+          `/api/v1/tile/download-tiles/disk/${zoomLevel}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...data,
+              extent,
+              center,
+              projection: projection.getCode(),
+              mapSource: currentMapSource,
+              socketId,
+            }),
+          }
+        );
+
+        const contentDisposition = res.headers.get("Content-Disposition");
+        if (contentDisposition && contentDisposition.includes("attachment")) {
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.download = `${data.folderName}.zip`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        } else {
+          console.error("Unexpected response format, expected a zip file.");
+        }
       }
 
       clearInterval(progressInterval);
