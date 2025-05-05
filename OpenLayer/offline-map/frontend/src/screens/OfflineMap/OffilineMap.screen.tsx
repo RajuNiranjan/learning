@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Tile } from "../MapDashBoard/components/MapThumbNailCard";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -8,6 +8,7 @@ import XYZ from "ol/source/XYZ";
 import { Loader } from "../../ui-global/Loader";
 import { ZoomControls } from "../../ui-global/ZoomControls";
 import { defaults as defaultControls } from "ol/control";
+import { OfflineMapHeader } from "./components/OfflineMapHeader";
 
 const OfflineMapScreen = () => {
   const { tileId } = useParams();
@@ -85,21 +86,8 @@ const OfflineMapScreen = () => {
 
   return (
     <div className=" bg-[#aad3df] h-screen w-screen">
+      <OfflineMapHeader tileData={tileData} />
       <div ref={offlineMapRef} className="h-full w-full bg-[#aad3df]" />
-      <div className="flex items-center gap-2 my-4 absolute top-0 left-5">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Link
-            to="/map-dashboard"
-            className="hover:text-blue-500 text-white hover:underline"
-          >
-            Dashboard
-          </Link>
-          <span className="text-white">{">"}</span>
-          <span className="text-white font-bold hover:underline cursor-default">
-            {tileData?.name || "Loading..."}
-          </span>
-        </div>
-      </div>
 
       <ZoomControls
         mapInstanceRef={mapInstanceRef as React.RefObject<Map>}

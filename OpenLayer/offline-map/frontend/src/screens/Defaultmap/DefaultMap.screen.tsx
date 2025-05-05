@@ -145,10 +145,6 @@ const DefaultMapScreen = () => {
       const extent = [minLon, minLat, maxLon, maxLat];
       const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
 
-      const progressInterval = setInterval(() => {
-        setDownloadProgress((prev) => Math.min(prev + 10, 90));
-      }, 500);
-
       if (selectedSaveOption === "GCS") {
         await fetch(`/api/v1/tile/download-tiles/gcs/${zoomLevel}`, {
           method: "POST",
@@ -199,7 +195,6 @@ const DefaultMapScreen = () => {
         }
       }
 
-      clearInterval(progressInterval);
       setDownloadProgress(100);
       setIsDownloadComplete(true);
     } catch (error) {
@@ -291,6 +286,15 @@ const DefaultMapScreen = () => {
         const feature = e.feature;
         const geometry = feature?.getGeometry();
         if (geometry instanceof Polygon) {
+          vectorSourceRef.current.clear();
+          if (map) {
+            map.getOverlays().forEach((overlay) => {
+              if (map) {
+                map.removeOverlay(overlay);
+              }
+            });
+          }
+
           const extent = geometry.getExtent();
           const [minX, minY, maxX, maxY] = extent;
           const [minLon, minLat] = toLonLat([minX, minY]);

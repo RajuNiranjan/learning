@@ -55,6 +55,10 @@ export const downloadTilesGCS = async (req, res) => {
 
     let totalTiles = 0;
     let downloadedTiles = 0;
+    let lastProgressUpdate = 0;
+    const PROGRESS_UPDATE_INTERVAL = 1000; // Update progress every second
+    const progressHistory = [];
+    const HISTORY_SIZE = 5; // Keep track of last 5 progress values
 
     for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
       const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
@@ -84,15 +88,33 @@ export const downloadTilesGCS = async (req, res) => {
             await downloadTile(zoom, x, y, outputPath, mapSource);
             console.log(`Tile ${zoom}/${x}/${y} downloaded successfully`);
             downloadedTiles++;
-            if (req.app.get("io") && socketId) {
-              req.app
-                .get("io")
-                .to(socketId)
-                .emit("downloadProgress", {
-                  progress: Math.round((downloadedTiles / totalTiles) * 100),
+
+            const currentTime = Date.now();
+            if (currentTime - lastProgressUpdate >= PROGRESS_UPDATE_INTERVAL) {
+              const currentProgress = Math.round(
+                (downloadedTiles / totalTiles) * 100
+              );
+              progressHistory.push(currentProgress);
+
+              if (progressHistory.length > HISTORY_SIZE) {
+                progressHistory.shift();
+              }
+
+              // Calculate moving average
+              const averageProgress = Math.round(
+                progressHistory.reduce((a, b) => a + b, 0) /
+                  progressHistory.length
+              );
+
+              if (req.app.get("io") && socketId) {
+                req.app.get("io").to(socketId).emit("downloadProgress", {
+                  progress: averageProgress,
                   downloadedTiles,
                   totalTiles,
                 });
+              }
+
+              lastProgressUpdate = currentTime;
             }
           }
         }
@@ -177,6 +199,10 @@ export const downloadTilesDisk = async (req, res) => {
 
     let totalTiles = 0;
     let downloadedTiles = 0;
+    let lastProgressUpdate = 0;
+    const PROGRESS_UPDATE_INTERVAL = 1000; // Update progress every second
+    const progressHistory = [];
+    const HISTORY_SIZE = 5; // Keep track of last 5 progress values
 
     for (let zoom = MIN_ZOOM; zoom <= MAX_ZOOM; zoom++) {
       const topLeftTile = lonLatToTile(minLon, maxLat, zoom);
@@ -205,15 +231,33 @@ export const downloadTilesDisk = async (req, res) => {
             await downloadTile(zoom, x, y, outputPath, mapSource);
             console.log(`Tile ${zoom}/${x}/${y} downloaded successfully`);
             downloadedTiles++;
-            if (req.app.get("io") && socketId) {
-              req.app
-                .get("io")
-                .to(socketId)
-                .emit("downloadProgress", {
-                  progress: Math.round((downloadedTiles / totalTiles) * 100),
+
+            const currentTime = Date.now();
+            if (currentTime - lastProgressUpdate >= PROGRESS_UPDATE_INTERVAL) {
+              const currentProgress = Math.round(
+                (downloadedTiles / totalTiles) * 100
+              );
+              progressHistory.push(currentProgress);
+
+              if (progressHistory.length > HISTORY_SIZE) {
+                progressHistory.shift();
+              }
+
+              // Calculate moving average
+              const averageProgress = Math.round(
+                progressHistory.reduce((a, b) => a + b, 0) /
+                  progressHistory.length
+              );
+
+              if (req.app.get("io") && socketId) {
+                req.app.get("io").to(socketId).emit("downloadProgress", {
+                  progress: averageProgress,
                   downloadedTiles,
                   totalTiles,
                 });
+              }
+
+              lastProgressUpdate = currentTime;
             }
           }
         }

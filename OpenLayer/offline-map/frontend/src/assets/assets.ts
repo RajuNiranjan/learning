@@ -6,6 +6,7 @@ import ZoomOutIcon from './zoom-out.svg'
 import FolerIcon from './folder-fill.svg'
 import VeticalEllipsisIcon from './vertial-ellipsis.svg'
 import XIcon from './x.svg'
+import PencilIcon from './pencil.svg'
 
 export {
     ArrowLeftIcon,
@@ -16,4 +17,5 @@ export {
   FolerIcon,
   VeticalEllipsisIcon,
   XIcon,
+  PencilIcon,
 };
