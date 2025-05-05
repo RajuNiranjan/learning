@@ -2,13 +2,13 @@ export const DownloadStatusCard = ({
   isVisible,
   progress,
   isCompleted,
-  onClose,
+  // onClose,
   onCancelDownload,
 }: {
   isVisible: boolean;
   progress: number;
   isCompleted: boolean;
-  onClose: () => void;
+  // onClose: () => void;
   onCancelDownload: () => void;
 }) => {
   if (!isVisible) return null;

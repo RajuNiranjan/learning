@@ -57,3 +57,16 @@ export const deleteTileService = async (tileId) => {
     throw new Error(error);
   }
 };
+
+export const updateTileService = async (tileId, tileData) => {
+  try {
+    const result = await pool.query(
+      `UPDATE tile_table SET name = $1 WHERE id =$2 RETURNING *`,
+      [tileData.name, tileId]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};

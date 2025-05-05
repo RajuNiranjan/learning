@@ -33,8 +33,15 @@ export type FormData = {
   maxLat: number;
 };
 
-// Add these helpers at the top of your component
-const persistDownloadState = (state) => {
+interface DownloadState {
+  isDownloading: boolean;
+  showDownloadStatus: boolean;
+  downloadProgress: number;
+  isDownloadComplete: boolean;
+  folderName?: string;
+}
+
+const persistDownloadState = (state: DownloadState) => {
   localStorage.setItem("downloadState", JSON.stringify(state));
 };
 const getPersistedDownloadState = () => {
@@ -450,7 +457,7 @@ const DefaultMapScreen = () => {
         isVisible={showDownloadStatus}
         progress={downloadProgress}
         isCompleted={isDownloadComplete}
-        onClose={handleDownloadStatusClose}
+        // onClose={handleDownloadStatusClose}
         onCancelDownload={handleCancelDownload}
       />
       <CustomDialog

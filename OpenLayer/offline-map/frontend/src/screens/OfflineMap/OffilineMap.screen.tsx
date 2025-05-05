@@ -105,54 +105,6 @@ const OfflineMapScreen = () => {
         mapInstanceRef={mapInstanceRef as React.RefObject<Map>}
         zoomLevel={zoomLevel}
       />
-
-      {/* <div className="flex flex-col gap-2 absolute top-20 right-10">
-        <div className="bg-white/50 backdrop-blur-sm w-[200px] h-max rounded  p-2">
-          <h1 className="text-lg font-bold">Extent</h1>
-          <div className="flex flex-col gap-2">
-            <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-              minX : {tileData?.extent[0]}
-            </p>
-            <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-              maxX : {tileData?.extent[1]}
-            </p>
-            <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-              minY : {tileData?.extent[2]}
-            </p>
-            <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-              maxY : {tileData?.extent[3]}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white/50 backdrop-blur-sm w-[200px]  h-max rounded  p-2">
-          <h1 className="text-lg font-bold">Center</h1>
-          <div className="flex flex-col gap-2">
-            <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-              minX : {tileData?.center[0]}
-            </p>
-            <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-              maxX : {tileData?.center[1]}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white/50 backdrop-blur-sm w-[200px]  h-max rounded  p-2">
-          <h1 className="text-lg font-bold">Zoom</h1>
-          <div className="flex flex-col gap-2">
-            <p className="text-[10px] h-8  w-full flex p-2 justify-start items-center rounded text-black/60 bg-white/40">
-              {tileData?.zoom[0]}
-            </p>
-            <p className="text-[10px] h-8  w-full flex p-2 justify-start items-center rounded text-black/60 bg-white/40">
-              {tileData?.zoom[1]}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white/50 backdrop-blur-sm w-[200px]  h-max rounded  p-2">
-          <h1 className="text-lg font-bold">Projection</h1>
-          <p className="text-[10px] h-8  w-full flex justify-center items-center rounded text-black/60 bg-white/40">
-            {tileData?.projection}
-          </p>
-        </div>
-      </div> */}
     </div>
   );
 };

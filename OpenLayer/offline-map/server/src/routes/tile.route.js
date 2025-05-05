@@ -7,6 +7,7 @@ import {
   deleteTile,
   cancelDownload,
   getTileImage,
+  updateTile,
 } from "../controllers/tile.controller.js";
 
 export const tileRouter = express.Router();
@@ -18,3 +19,4 @@ tileRouter.get("/", getAllTiles);
 tileRouter.get("/:id", getTileById);
 tileRouter.delete("/:id", deleteTile);
 tileRouter.get("/:tileId/:z/:x/:y.png", getTileImage);
+tileRouter.put("/:tileId", updateTile);

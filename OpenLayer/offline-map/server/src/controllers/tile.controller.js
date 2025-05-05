@@ -7,6 +7,7 @@ import {
   deleteTileService,
   getTileByIdService,
   getTileService,
+  updateTileService,
 } from "../models/tile.model.js";
 import os from "os";
 import archiver from "archiver";
@@ -357,5 +358,34 @@ export const getTileImage = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal server error");
+  }
+};
+
+export const updateTile = async (req, res) => {
+  try {
+    const { tileId } = req.params;
+    const { folderName } = req.body;
+
+    const tile = await getTileByIdService(tileId);
+    if (!tile) {
+      return res.status(404).json({ error: "Tile not found" });
+    }
+
+    const oldFolderPath = path.join("tiles", tile.name);
+    const newFolderPath = path.join("tiles", folderName);
+
+    if (fs.existsSync(oldFolderPath)) {
+      fs.renameSync(oldFolderPath, newFolderPath);
+    }
+
+    const updatedTile = await updateTileService(tileId, { name: folderName });
+
+    res.status(200).json({
+      message: "Tile updated successfully and folder name changed",
+      tile: updatedTile,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
