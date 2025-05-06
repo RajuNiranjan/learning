@@ -106,6 +106,12 @@ const DefaultMapScreen = () => {
     maxLat: 0,
   });
 
+  const removeAllOverlays = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.getOverlays().clear();
+    }
+  };
+
   /**
    * Handling to close the dialog
    * @returns void
@@ -116,6 +122,7 @@ const DefaultMapScreen = () => {
       if (currentFeature) {
         vectorSourceRef.current.removeFeature(currentFeature);
         setCurrentFeature(null);
+        removeAllOverlays();
       }
     }
   };
@@ -216,6 +223,7 @@ const DefaultMapScreen = () => {
     if (currentFeature) {
       vectorSourceRef.current.removeFeature(currentFeature);
       setCurrentFeature(null);
+      removeAllOverlays();
     }
   };
 
@@ -256,6 +264,7 @@ const DefaultMapScreen = () => {
           minZoom: 3,
           maxZoom: 18,
           projection,
+          extent: [-20026376.39, -20048966.1, 20026376.39, 20048966.1],
         }),
       });
 
@@ -371,6 +380,7 @@ const DefaultMapScreen = () => {
         mapInstanceRef.current.removeInteraction(drawInteraction);
         vectorSourceRef.current.clear();
         setCurrentFeature(null);
+        removeAllOverlays();
       }
     }
   };
@@ -489,7 +499,7 @@ const DefaultMapScreen = () => {
   }, [isDownloadComplete]);
 
   return (
-    <div className="w-screen h-screen ">
+    <div className="w-screen h-screen">
       <DefaultMapHeader
         isDrawShape={isDrawShape}
         setIsDrawShape={setIsDrawShape}
@@ -497,7 +507,7 @@ const DefaultMapScreen = () => {
         hasDrawnShape={!!currentFeature}
       />
       <MapAreaTool onMapSourceChange={handleMapSourceChange} />
-      <div ref={mapRef} className="w-screen h-[calc(100vh-80px)]" />
+      <div ref={mapRef} className="w-full h-[calc(100vh-5rem)]" />
       <CoordianteCard coordinates={coordinates} />
       <ZoomControls
         mapInstanceRef={mapInstanceRef as React.RefObject<Map>}

@@ -12,6 +12,7 @@ export const DownloadStatusCard = ({
   onCancelDownload: () => void;
 }) => {
   if (!isVisible) return null;
+  console.log("progress percentage", progress);
 
   return (
     <>
@@ -24,11 +25,14 @@ export const DownloadStatusCard = ({
         <h1 className="text-[1.5rem] font-normal text-[#E8E7E7] leading-[2rem] tracking-[0.00625rem] text-center mb-[1rem]">
           {isCompleted ? "Download Complete!" : "Downloading...."}
         </h1>
-        <div className="h-[1rem] w-full mb-[2rem] bg-[#333]">
+        <div className="h-[1rem] w-full mb-[2rem] bg-[#333] relative">
           <div
             className="h-full bg-[#4976BA] transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
+          <span className="absolute inset-0 flex items-center justify-center text-white text-xs">
+            {progress}%
+          </span>
         </div>
         {!isCompleted && (
           <div className="flex items-center justify-center">

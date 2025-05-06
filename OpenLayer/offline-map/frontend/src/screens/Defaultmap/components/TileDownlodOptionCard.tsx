@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FormData } from "../DefaultMap.screen";
 
 export const TileDownlodOptionCard = ({
@@ -17,6 +17,14 @@ export const TileDownlodOptionCard = ({
   onClose: () => void;
 }) => {
   const [folderName, setFolderName] = useState<string>(formData.folderName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   console.log("isDownloading", isDownloading);
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -52,6 +60,7 @@ export const TileDownlodOptionCard = ({
             className="bg-[#000000] text-[#656567] w-[19.5rem] h-[1.95rem] p-[0.5rem] border border-[#D8DCDE] rounded-[0.1rem] text-[0.75rem] leading-[1rem] font-normal tracking-[0.025rem]"
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
+            ref={inputRef}
           />
         </div>
         <div className="flex items-center justify-between">

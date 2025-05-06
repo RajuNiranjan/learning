@@ -1,7 +1,7 @@
 import { lonLatToTile, ensureDirSync } from "../utils/tileHelpers.js";
 import path from "path";
 import fs from "fs";
-import { downloadTile } from "../utils/downloadTile.js";
+import { downloadTile, cancelFlags } from "../utils/downloadTile.js";
 import {
   createTileService,
   deleteTileService,
@@ -264,17 +264,22 @@ export const downloadTilesDisk = async (req, res) => {
       }
     }
 
-    const zipFilePath = path.join(downloadsPath, `${folderName}.zip`);
+    // --- CHANGED: Use a temp directory for the zip file ---
+    const tmpDir = os.tmpdir();
+    const zipFilePath = path.join(tmpDir, `${folderName}.zip`);
     const output = fs.createWriteStream(zipFilePath);
     const archive = archiver("zip", { zlib: { level: 9 } });
 
     output.on("close", () => {
+      // Stream the zip file to the client
       res.download(zipFilePath, `${folderName}.zip`, (err) => {
+        // Remove temp zip and base folder after sending
+        fs.rmSync(zipFilePath, { force: true });
+        fs.rmSync(baseFolderPath, { recursive: true, force: true });
         if (err) {
           console.log("Error sending file:", err);
           res.status(500).json({ error: "Failed to send zip file" });
         }
-        fs.rmSync(baseFolderPath, { recursive: true, force: true });
       });
     });
 
@@ -302,16 +307,56 @@ export const cancelDownload = async (req, res) => {
     const { folderName } = req.body;
     const tilesFolderPath = path.join("tiles", folderName);
 
+    // Disk download paths
+    const downloadsPath = path.join(os.homedir(), "Downloads");
+    const diskFolderPath = path.join(downloadsPath, folderName);
+    const diskTilesFolderPath = path.join(
+      diskFolderPath,
+      `${folderName}_tiles`
+    );
+    const diskZipFilePath = path.join(downloadsPath, `${folderName}.zip`);
+
     if (!folderName) {
       return res.status(400).json({ error: "Folder name is required" });
     }
 
+    let removed = false;
+
+    // Remove GCS/tiles folder if exists
     if (fs.existsSync(tilesFolderPath)) {
       fs.rmSync(tilesFolderPath, { recursive: true, force: true });
-      console.log("==== Download Canceled ====");
+      removed = true;
+      console.log("==== Download Canceled (tiles folder) ====");
+    }
+
+    // Remove disk tiles folder if exists
+    if (fs.existsSync(diskTilesFolderPath)) {
+      fs.rmSync(diskTilesFolderPath, { recursive: true, force: true });
+      removed = true;
+      console.log("==== Download Canceled (disk tiles folder) ====");
+    }
+
+    // Remove disk folder if exists
+    if (fs.existsSync(diskFolderPath)) {
+      fs.rmSync(diskFolderPath, { recursive: true, force: true });
+      removed = true;
+      console.log("==== Download Canceled (disk folder) ====");
+    }
+
+    // Remove zip file if exists
+    if (fs.existsSync(diskZipFilePath)) {
+      fs.rmSync(diskZipFilePath, { force: true });
+      removed = true;
+      console.log("==== Download Canceled (disk zip file) ====");
+    }
+
+    // Set cancel flag
+    cancelFlags[folderName] = true;
+
+    if (removed) {
       return res
         .status(200)
-        .json({ message: "Download canceled and folder removed" });
+        .json({ message: "Download canceled and folder(s)/file(s) removed" });
     } else {
       return res.status(404).json({ error: "Folder not found" });
     }

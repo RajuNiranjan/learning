@@ -31,6 +31,8 @@ class Semaphore {
 const downloadSemaphore = new Semaphore(10); // Increased from 5 to 10 concurrent downloads
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
+export const cancelFlags = {}; // key: folderName, value: true/false
+
 export async function downloadTile(
   z,
   x,
