@@ -20,6 +20,17 @@ import Style from "ol/style/Style";
 import Stroke from "ol/style/Stroke";
 import io, { Socket } from "socket.io-client";
 import Overlay from "ol/Overlay";
+import Modify from "ol/interaction/Modify";
+import Translate from "ol/interaction/Translate";
+import {
+  never,
+  platformModifierKeyOnly,
+  primaryAction,
+} from "ol/events/condition";
+import { getCenter, getHeight, getWidth } from "ol/extent";
+import Point from "ol/geom/Point";
+import Fill from "ol/style/Fill";
+import CircleStyle from "ol/style/Circle";
 
 type Coordinates = {
   lat: number;
@@ -57,6 +68,7 @@ const DefaultMapScreen = () => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const vectorSourceRef = useRef<VectorSource>(new VectorSource());
   const mapInstanceRef = useRef<Map | null>(null);
+  const overlayRef = useRef<Overlay | null>(null);
   const [drawInteraction, setDrawInteraction] = useState<Draw | null>(null);
   const [isDrawShape, setIsDrawShape] = useState<boolean>(false);
   const [isDownloadTileDialogOpen, setIsDownloadTileDialogOpen] =
@@ -250,7 +262,40 @@ const DefaultMapScreen = () => {
 
     const vector = new VectorLayer({
       source: vectorSourceRef.current,
-      style,
+      style: function (feature) {
+        const styles = [
+          new Style({
+            fill: new Fill({
+              color: "rgba(255, 255, 255, 0.2)",
+            }),
+            stroke: new Stroke({
+              color: "#909093",
+              width: 3,
+            }),
+            image: new CircleStyle({
+              radius: 0,
+              fill: new Fill({
+                color: "rgba(0, 0, 0, 0)",
+              }),
+            }),
+          }),
+        ];
+
+        const modifyGeometry = feature.get("modifyGeometry");
+        const geometry = modifyGeometry
+          ? modifyGeometry.geometry
+          : feature.getGeometry();
+        const result = calculateCenter(geometry);
+        const center = result.center;
+        if (center) {
+          styles.push(
+            new Style({
+              geometry: new Point(center),
+            })
+          );
+        }
+        return styles;
+      },
     });
 
     if (mapRef.current) {
@@ -286,11 +331,6 @@ const DefaultMapScreen = () => {
 
       setDrawInteraction(draw);
 
-      /**
-       * Handling to draw the shape
-       * @param e - Draw event
-       * @returns void
-       */
       draw.on("drawend", (e) => {
         const feature = e.feature;
         const geometry = feature?.getGeometry();
@@ -327,11 +367,14 @@ const DefaultMapScreen = () => {
           overlayElement.style.transform = "translate(-105%, -135%)";
           overlayElement.style.left = "50%";
           overlayElement.style.zIndex = "1000";
+
           const overlay = new Overlay({
             element: overlayElement,
             position: [maxX, maxY],
             positioning: "top-right",
           });
+
+          overlayRef.current = overlay;
 
           if (map) {
             map.addOverlay(overlay);
@@ -359,6 +402,171 @@ const DefaultMapScreen = () => {
           lon: coordinates[1],
         });
       });
+
+      // Add Modify interaction
+      const defaultStyle = new Modify({ source: vectorSourceRef.current })
+        .getOverlay()
+        .getStyleFunction();
+
+      const modify = new Modify({
+        source: vectorSourceRef.current,
+        condition: function (event) {
+          return primaryAction(event) && !platformModifierKeyOnly(event);
+        },
+        deleteCondition: never,
+        insertVertexCondition: never,
+        style: function (feature, resolution) {
+          feature
+            .get("features")
+            .forEach(function (modifyFeature: OLFeature<Geometry>) {
+              const modifyGeometry = modifyFeature.get("modifyGeometry");
+              if (modifyGeometry) {
+                const point = feature.getGeometry()?.getCoordinates();
+                let modifyPoint = modifyGeometry.point;
+                if (!modifyPoint) {
+                  modifyPoint = point;
+                  modifyGeometry.point = modifyPoint;
+                  modifyGeometry.geometry0 = modifyGeometry.geometry;
+                  const result = calculateCenter(modifyGeometry.geometry0);
+                  modifyGeometry.center = result.center;
+                  modifyGeometry.minRadius = result.minRadius;
+                }
+
+                const center = modifyGeometry.center;
+                const minRadius = modifyGeometry.minRadius;
+                let dx, dy;
+                dx = modifyPoint[0] - center[0];
+                dy = modifyPoint[1] - center[1];
+                const initialRadius = Math.sqrt(dx * dx + dy * dy);
+                if (initialRadius > minRadius) {
+                  dx = point[0] - center[0];
+                  dy = point[1] - center[1];
+                  const currentRadius = Math.sqrt(dx * dx + dy * dy);
+                  if (currentRadius > 0) {
+                    const geometry = modifyGeometry.geometry0.clone();
+                    geometry.scale(
+                      currentRadius / initialRadius,
+                      undefined,
+                      center
+                    );
+                    modifyGeometry.geometry = geometry;
+                  }
+                }
+              }
+            });
+          return defaultStyle?.(feature, resolution);
+        },
+      });
+
+      modify.on("modifystart", function (event) {
+        event.features.forEach(function (feature) {
+          feature.set(
+            "modifyGeometry",
+            { geometry: feature.getGeometry()?.clone() },
+            true
+          );
+        });
+      });
+
+      modify.on("modifyend", function (event) {
+        event.features.forEach(function (feature) {
+          const modifyGeometry = feature.get("modifyGeometry");
+          if (modifyGeometry) {
+            feature.setGeometry(modifyGeometry.geometry);
+            feature.unset("modifyGeometry", true);
+
+            // Update overlay position
+            if (overlayRef.current) {
+              const geometry = feature.getGeometry();
+              if (geometry instanceof Polygon) {
+                const extent = geometry.getExtent();
+                const [maxX, maxY] = [extent[2], extent[3]];
+                overlayRef.current.setPosition([maxX, maxY]);
+              }
+            }
+
+            // Update form data
+            const geometry = feature.getGeometry();
+            if (geometry instanceof Polygon) {
+              const extent = geometry.getExtent();
+              const [minX, minY, maxX, maxY] = extent;
+              const [minLon, minLat] = toLonLat([minX, minY]);
+              const [maxLon, maxLat] = toLonLat([maxX, maxY]);
+
+              setFormData((prevData) => ({
+                ...prevData,
+                minLon,
+                minLat,
+                maxLon,
+                maxLat,
+              }));
+            }
+          }
+        });
+      });
+
+      map.addInteraction(modify);
+      map.addInteraction(
+        new Translate({
+          condition: function (event) {
+            return primaryAction(event);
+          },
+          layers: [vector],
+          hitTolerance: 0,
+          filter: function (feature, layer) {
+            return true;
+          },
+        })
+      );
+
+      // Add a pointer style to indicate draggability
+      map.on("pointermove", function (e) {
+        const hit = map.forEachFeatureAtPixel(e.pixel, function (feature) {
+          return feature;
+        });
+
+        if (hit) {
+          map.getTargetElement().style.cursor = "";
+        } else {
+          map.getTargetElement().style.cursor = "default";
+        }
+      });
+
+      // Add a handler for translate end
+      const translate = new Translate({
+        condition: function (event) {
+          return primaryAction(event);
+        },
+        layers: [vector],
+      });
+
+      translate.on("translateend", function (event) {
+        event.features.forEach(function (feature) {
+          const geometry = feature.getGeometry();
+          if (geometry instanceof Polygon) {
+            const extent = geometry.getExtent();
+            const [maxX, maxY] = [extent[2], extent[3]];
+
+            // Update overlay position
+            if (overlayRef.current) {
+              overlayRef.current.setPosition([maxX, maxY]);
+            }
+
+            const [minLon, minLat] = toLonLat([extent[0], extent[1]]);
+            const [maxLon, maxLat] = toLonLat([maxX, maxY]);
+
+            setFormData((prevData) => ({
+              ...prevData,
+              minLon,
+              minLat,
+              maxLon,
+              maxLat,
+            }));
+          }
+        });
+      });
+
+      map.addInteraction(translate);
     }
 
     return () => {
@@ -497,6 +705,46 @@ const DefaultMapScreen = () => {
       return () => clearTimeout(timer);
     }
   }, [isDownloadComplete]);
+
+  const calculateCenter = (geometry: any) => {
+    let center, coordinates, minRadius;
+    const type = geometry.getType();
+    if (type === "Polygon") {
+      let x = 0;
+      let y = 0;
+      let i = 0;
+      coordinates = geometry.getCoordinates()[0].slice(1);
+      coordinates.forEach(function (coordinate: any) {
+        x += coordinate[0];
+        y += coordinate[1];
+        i++;
+      });
+      center = [x / i, y / i];
+    } else {
+      center = getCenter(geometry.getExtent());
+    }
+    let sqDistances;
+    if (coordinates) {
+      sqDistances = coordinates.map(function (coordinate: any) {
+        const dx = coordinate[0] - center[0];
+        const dy = coordinate[1] - center[1];
+        return dx * dx + dy * dy;
+      });
+      minRadius = Math.sqrt(Math.max(...sqDistances)) / 3;
+    } else {
+      minRadius =
+        Math.max(
+          getWidth(geometry.getExtent()),
+          getHeight(geometry.getExtent())
+        ) / 3;
+    }
+    return {
+      center: center,
+      coordinates: coordinates,
+      minRadius: minRadius,
+      sqDistances: sqDistances,
+    };
+  };
 
   return (
     <div className="w-screen h-screen">
