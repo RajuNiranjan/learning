@@ -5,7 +5,7 @@ import { PORT, FRONTEND_URL } from "./utils/env_var.js";
 import "./config/database.js";
 import { authRouter } from "./routers/auth.router.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-
+import { messageRouter } from "./routers/messages.router.js";
 const app = express();
 
 app.use(
@@ -26,6 +26,7 @@ app.get("/test", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/messages", messageRouter);
 
 app.use(errorHandler);
 
