@@ -57,11 +57,7 @@ export const MapThumbNailCard = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
-        <Loader />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (tiles.length === 0) {
