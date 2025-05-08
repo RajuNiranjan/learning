@@ -31,6 +31,8 @@ import { getCenter, getHeight, getWidth } from "ol/extent";
 import Point from "ol/geom/Point";
 import Fill from "ol/style/Fill";
 import CircleStyle from "ol/style/Circle";
+import Geometry from "ol/geom/Geometry";
+import OLFeature from "ol/Feature";
 
 type Coordinates = {
   lat: number;
@@ -95,12 +97,12 @@ const DefaultMapScreen = () => {
 
   console.log("downloadProgress", downloadProgress);
 
-  const style = new Style({
-    stroke: new Stroke({
-      color: "#909093",
-      width: 3,
-    }),
-  });
+  // const style = new Style({
+  //   stroke: new Stroke({
+  //     color: "#909093",
+  //     width: 3,
+  //   }),
+  // });
 
   if (error) {
     console.log(error);
@@ -121,6 +123,39 @@ const DefaultMapScreen = () => {
   const removeAllOverlays = () => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.getOverlays().clear();
+    }
+  };
+
+  const createCloseOverlay = (feature: Feature, map: Map) => {
+    const geometry = feature.getGeometry();
+    if (geometry instanceof Polygon) {
+      const extent = geometry.getExtent();
+      const [maxX, maxY] = [extent[2], extent[3]];
+
+      const overlayElement = document.createElement("div");
+      overlayElement.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2.14645 2.85355C1.95118 2.65829 1.95118 2.34171 2.14645 2.14645C2.34171 1.95118 2.65829 1.95118 2.85355 2.14645L8 7.29289L13.1464 2.14645C13.3417 1.95118 13.6583 1.95118 13.8536 2.14645C14.0488 2.34171 14.0488 2.65829 13.8536 2.85355L8.70711 8L13.8536 13.1464C14.0488 13.3417 14.0488 13.6583 13.8536 13.8536C13.6583 14.0488 13.3417 14.0488 13.1464 13.8536L8 8.70711L2.85355 13.8536C2.65829 14.0488 2.34171 14.0488 2.14645 13.8536C1.95119 13.6583 1.95119 13.3417 2.14645 13.1464L7.29289 8L2.14645 2.85355Z" fill="#242F35"/>
+      </svg>`;
+      overlayElement.style.cursor = "pointer";
+      overlayElement.style.position = "absolute";
+      overlayElement.style.transform = "translate(-105%, -135%)";
+      overlayElement.style.left = "50%";
+      overlayElement.style.zIndex = "1000";
+
+      const overlay = new Overlay({
+        element: overlayElement,
+        position: [maxX, maxY],
+        positioning: "top-right",
+      });
+
+      overlayRef.current = overlay;
+      map.addOverlay(overlay);
+
+      overlayElement.addEventListener("click", () => {
+        vectorSourceRef.current.removeFeature(feature);
+        map.removeOverlay(overlay);
+        setCurrentFeature(null);
+      });
     }
   };
 
@@ -266,16 +301,16 @@ const DefaultMapScreen = () => {
         const styles = [
           new Style({
             fill: new Fill({
-              color: "rgba(255, 255, 255, 0.2)",
+              color: "#FFFFFF1E",
             }),
             stroke: new Stroke({
-              color: "#909093",
-              width: 3,
+              color: "#1C1C1EBF",
+              width: 2,
             }),
             image: new CircleStyle({
               radius: 0,
               fill: new Fill({
-                color: "rgba(0, 0, 0, 0)",
+                color: "#000000",
               }),
             }),
           }),
@@ -327,6 +362,9 @@ const DefaultMapScreen = () => {
         type: "Circle",
         source: vectorSourceRef.current,
         geometryFunction: createBox(),
+        condition: (event) => {
+          return vectorSourceRef.current.getFeatures().length === 0;
+        },
       });
 
       setDrawInteraction(draw);
@@ -337,11 +375,7 @@ const DefaultMapScreen = () => {
         if (geometry instanceof Polygon) {
           vectorSourceRef.current.clear();
           if (map) {
-            map.getOverlays().forEach((overlay) => {
-              if (map) {
-                map.removeOverlay(overlay);
-              }
-            });
+            map.getOverlays().clear();
           }
 
           const extent = geometry.getExtent();
@@ -358,34 +392,8 @@ const DefaultMapScreen = () => {
             maxLat,
           });
 
-          const overlayElement = document.createElement("div");
-          overlayElement.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2.14645 2.85355C1.95118 2.65829 1.95118 2.34171 2.14645 2.14645C2.34171 1.95118 2.65829 1.95118 2.85355 2.14645L8 7.29289L13.1464 2.14645C13.3417 1.95118 13.6583 1.95118 13.8536 2.14645C14.0488 2.34171 14.0488 2.65829 13.8536 2.85355L8.70711 8L13.8536 13.1464C14.0488 13.3417 14.0488 13.6583 13.8536 13.8536C13.6583 14.0488 13.3417 14.0488 13.1464 13.8536L8 8.70711L2.85355 13.8536C2.65829 14.0488 2.34171 14.0488 2.14645 13.8536C1.95119 13.6583 1.95119 13.3417 2.14645 13.1464L7.29289 8L2.14645 2.85355Z" fill="#242F35"/>
-          </svg>`;
-          overlayElement.style.cursor = "pointer";
-          overlayElement.style.position = "absolute";
-          overlayElement.style.transform = "translate(-105%, -135%)";
-          overlayElement.style.left = "50%";
-          overlayElement.style.zIndex = "1000";
-
-          const overlay = new Overlay({
-            element: overlayElement,
-            position: [maxX, maxY],
-            positioning: "top-right",
-          });
-
-          overlayRef.current = overlay;
-
           if (map) {
-            map.addOverlay(overlay);
-
-            overlayElement.addEventListener("click", () => {
-              vectorSourceRef.current.removeFeature(feature);
-              if (map) {
-                map.removeOverlay(overlay);
-              }
-              setCurrentFeature(null);
-            });
+            createCloseOverlay(feature, map);
           }
         }
       });
@@ -521,17 +529,18 @@ const DefaultMapScreen = () => {
 
       // Add a pointer style to indicate draggability
       map.on("pointermove", function (e) {
-        const hit = map.forEachFeatureAtPixel(e.pixel, function (feature) {
-          return feature;
-        });
+        if (map) {
+          const hit = map.forEachFeatureAtPixel(e.pixel, function (feature) {
+            return feature;
+          });
 
-        if (hit) {
-          map.getTargetElement().style.cursor = "";
-        } else {
-          map.getTargetElement().style.cursor = "default";
+          if (hit) {
+            map.getTargetElement().style.cursor = "pointer";
+          } else {
+            map.getTargetElement().style.cursor = "default";
+          }
         }
       });
-
       // Add a handler for translate end
       const translate = new Translate({
         condition: function (event) {
@@ -567,6 +576,11 @@ const DefaultMapScreen = () => {
       });
 
       map.addInteraction(translate);
+
+      // Add this after map initialization
+      if (currentFeature && map) {
+        createCloseOverlay(currentFeature, map);
+      }
     }
 
     return () => {
@@ -574,7 +588,7 @@ const DefaultMapScreen = () => {
         map.setTarget(undefined);
       }
     };
-  }, [currentMapSource]);
+  }, [currentMapSource]); // can we add the  --> currentFeature
 
   /**
    * Handling to toggle the draw shape
