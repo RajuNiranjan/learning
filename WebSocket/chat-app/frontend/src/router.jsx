@@ -5,36 +5,8 @@ import LoginScreen from "./views/LoginPage/LoginScreen";
 import SignUpScreen from "./views/SignUpPage/SignUpScreen";
 import SettingsScreen from "./views/SettingsPage/SettingsScreen";
 import ProfileScreen from "./views/ProfilePage/ProfileScreen";
-import { useAuthStore } from "./zustand/auth.store";
+import { PrivateRoutes, PublicRoutes } from "./utils/RouteGuards";
 import { Toaster } from "react-hot-toast";
-
-const PrivateRoute = ({ children }) => {
-  const { user, isCheckingAuth } = useAuthStore();
-
-  if (isCheckingAuth) {
-    return null;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-};
-
-const PublicRoute = ({ children }) => {
-  const { user, isCheckingAuth } = useAuthStore();
-
-  if (isCheckingAuth) {
-    return null;
-  }
-
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
 
 export const router = createBrowserRouter([
   {
@@ -49,42 +21,46 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: (
-          <PrivateRoute>
+          <PrivateRoutes>
             <HomeScreen />
-          </PrivateRoute>
+          </PrivateRoutes>
         ),
       },
       {
         path: "/login",
         element: (
-          <PublicRoute>
+          <PublicRoutes>
             <LoginScreen />
-          </PublicRoute>
+          </PublicRoutes>
         ),
       },
       {
         path: "/signup",
         element: (
-          <PublicRoute>
+          <PublicRoutes>
             <SignUpScreen />
-          </PublicRoute>
+          </PublicRoutes>
         ),
       },
       {
         path: "/settings",
         element: (
-          <PrivateRoute>
+          <PrivateRoutes>
             <SettingsScreen />
-          </PrivateRoute>
+          </PrivateRoutes>
         ),
       },
       {
         path: "/profile",
         element: (
-          <PrivateRoute>
+          <PrivateRoutes>
             <ProfileScreen />
-          </PrivateRoute>
+          </PrivateRoutes>
         ),
+      },
+      {
+        path: "*",
+        element: <Navigate to="/login" replace />,
       },
     ],
   },

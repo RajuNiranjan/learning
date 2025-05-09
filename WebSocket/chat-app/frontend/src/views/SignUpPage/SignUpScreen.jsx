@@ -58,13 +58,13 @@ const SignUpScreen = () => {
                 <span className="label-text font-medium">Full Name</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute z-50 inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="size-5 text-base-content/40" />
                 </div>
                 <input
                   type="text"
                   name="user_name"
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input  input-bordered w-full pl-10`}
                   placeholder="John Doe"
                   value={formData.user_name}
                   onChange={handleChange}
@@ -78,11 +78,10 @@ const SignUpScreen = () => {
                 <span className="label-text font-medium">Email</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute z-50 inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="size-5 text-base-content/40" />
                 </div>
                 <input
-                  name="email"
                   type="email"
                   className={`input input-bordered w-full pl-10`}
                   placeholder="you@example.com"
@@ -98,11 +97,10 @@ const SignUpScreen = () => {
                 <span className="label-text font-medium">Password</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute z-50 inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="size-5 text-base-content/40" />
                 </div>
                 <input
-                  name="password"
                   type={showPassword ? "text" : "password"}
                   className={`input input-bordered w-full pl-10`}
                   placeholder="••••••••"
