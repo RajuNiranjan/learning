@@ -1,8 +1,7 @@
 .PHONY: app api i 
 
 dev:
-	cd backend && npm run dev
-	cd frontend && npm run dev
+	cd backend && npm run dev & cd frontend && npm run dev
 
 build:
 	cd frontend && npm run build

@@ -160,7 +160,17 @@ export const updateProfile = async (req, res, next) => {
 
 export const checkAuth = async (req, res, next) => {
   try {
-    return res.status(200).json(req.user);
+    const { user_id } = req.user;
+    const user = await UserModel.findById(user_id).select("-password");
+
+    if (!user) {
+      return next({
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json(user);
   } catch (error) {
     console.log(error);
     next(error);
