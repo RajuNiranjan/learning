@@ -82,6 +82,7 @@ const SignUpScreen = () => {
                   <Mail className="size-5 text-base-content/40" />
                 </div>
                 <input
+                  name="email"
                   type="email"
                   className={`input input-bordered w-full pl-10`}
                   placeholder="you@example.com"
@@ -101,6 +102,7 @@ const SignUpScreen = () => {
                   <Lock className="size-5 text-base-content/40" />
                 </div>
                 <input
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   className={`input input-bordered w-full pl-10`}
                   placeholder="••••••••"
