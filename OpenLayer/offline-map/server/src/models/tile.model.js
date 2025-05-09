@@ -25,7 +25,9 @@ export const createTileService = async (tileData) => {
 
 export const getTileService = async () => {
   try {
-    const result = await pool.query("SELECT * FROM tile_table");
+    const result = await pool.query(
+      "SELECT * FROM tile_table ORDER BY name ASC"
+    );
     return result.rows;
   } catch (error) {
     console.error("Error fetching tiles:", error);

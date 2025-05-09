@@ -98,10 +98,10 @@ const DefaultMapScreen = () => {
   console.log("downloadProgress", downloadProgress);
 
   // const style = new Style({
-  //   stroke: new Stroke({
-  //     color: "#909093",
-  //     width: 3,
-  //   }),
+  // stroke: new Stroke({
+  // color: "#909093",
+  // width: 3,
+  // }),
   // });
 
   if (error) {
@@ -120,6 +120,9 @@ const DefaultMapScreen = () => {
     maxLat: 0,
   });
 
+  // Add new ref for mask layer
+  const maskLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+
   const removeAllOverlays = () => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.getOverlays().clear();
@@ -134,8 +137,8 @@ const DefaultMapScreen = () => {
 
       const overlayElement = document.createElement("div");
       overlayElement.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2.14645 2.85355C1.95118 2.65829 1.95118 2.34171 2.14645 2.14645C2.34171 1.95118 2.65829 1.95118 2.85355 2.14645L8 7.29289L13.1464 2.14645C13.3417 1.95118 13.6583 1.95118 13.8536 2.14645C14.0488 2.34171 14.0488 2.65829 13.8536 2.85355L8.70711 8L13.8536 13.1464C14.0488 13.3417 14.0488 13.6583 13.8536 13.8536C13.6583 14.0488 13.3417 14.0488 13.1464 13.8536L8 8.70711L2.85355 13.8536C2.65829 14.0488 2.34171 14.0488 2.14645 13.8536C1.95119 13.6583 1.95119 13.3417 2.14645 13.1464L7.29289 8L2.14645 2.85355Z" fill="#242F35"/>
-      </svg>`;
+<path d="M2.14645 2.85355C1.95118 2.65829 1.95118 2.34171 2.14645 2.14645C2.34171 1.95118 2.65829 1.95118 2.85355 2.14645L8 7.29289L13.1464 2.14645C13.3417 1.95118 13.6583 1.95118 13.8536 2.14645C14.0488 2.34171 14.0488 2.65829 13.8536 2.85355L8.70711 8L13.8536 13.1464C14.0488 13.3417 14.0488 13.6583 13.8536 13.8536C13.6583 14.0488 13.3417 14.0488 13.1464 13.8536L8 8.70711L2.85355 13.8536C2.65829 14.0488 2.34171 14.0488 2.14645 13.8536C1.95119 13.6583 1.95119 13.3417 2.14645 13.1464L7.29289 8L2.14645 2.85355Z" fill="#242F35"/>
+</svg>`;
       overlayElement.style.cursor = "pointer";
       overlayElement.style.position = "absolute";
       overlayElement.style.transform = "translate(-105%, -135%)";
@@ -152,9 +155,19 @@ const DefaultMapScreen = () => {
       map.addOverlay(overlay);
 
       overlayElement.addEventListener("click", () => {
+        // Remove the feature
         vectorSourceRef.current.removeFeature(feature);
+        // Remove the overlay
         map.removeOverlay(overlay);
+        // Clear the current feature
         setCurrentFeature(null);
+        // Remove the mask layer
+        if (maskLayerRef.current && mapInstanceRef.current) {
+          mapInstanceRef.current.removeLayer(maskLayerRef.current);
+          maskLayerRef.current = null;
+        }
+        // Keep isDrawShape true to allow drawing again immediately
+        // setIsDrawShape(false); // Remove this line
       });
     }
   };
@@ -170,6 +183,13 @@ const DefaultMapScreen = () => {
         vectorSourceRef.current.removeFeature(currentFeature);
         setCurrentFeature(null);
         removeAllOverlays();
+        // Remove the mask layer
+        if (maskLayerRef.current && mapInstanceRef.current) {
+          mapInstanceRef.current.removeLayer(maskLayerRef.current);
+          maskLayerRef.current = null;
+        }
+        // Keep isDrawShape true to allow drawing again immediately
+        // setIsDrawShape(false); // Remove this line
       }
     }
   };
@@ -363,7 +383,7 @@ const DefaultMapScreen = () => {
         source: vectorSourceRef.current,
         geometryFunction: createBox(),
         condition: (event) => {
-          return vectorSourceRef.current.getFeatures().length === 0;
+          return isDrawingAllowed();
         },
       });
 
@@ -392,9 +412,19 @@ const DefaultMapScreen = () => {
             maxLat,
           });
 
+          // Update the mask when a new feature is drawn
+          updateMask(feature);
+
           if (map) {
             createCloseOverlay(feature, map);
           }
+        }
+      });
+
+      draw.on("drawstart", (e) => {
+        if (!isDrawingAllowed()) {
+          e.preventDefault();
+          alert("Please remove the existing shape before drawing a new one");
         }
       });
 
@@ -509,6 +539,8 @@ const DefaultMapScreen = () => {
                 maxLat,
               }));
             }
+
+            updateMask(feature);
           }
         });
       });
@@ -571,6 +603,8 @@ const DefaultMapScreen = () => {
               maxLon,
               maxLat,
             }));
+
+            updateMask(feature);
           }
         });
       });
@@ -588,7 +622,7 @@ const DefaultMapScreen = () => {
         map.setTarget(undefined);
       }
     };
-  }, [currentMapSource]); // can we add the  --> currentFeature
+  }, [currentMapSource]); // can we add the --> currentFeature
 
   /**
    * Handling to toggle the draw shape
@@ -597,12 +631,22 @@ const DefaultMapScreen = () => {
   const toggleDrawShape = () => {
     if (mapInstanceRef.current && drawInteraction) {
       if (isDrawShape) {
-        mapInstanceRef.current.addInteraction(drawInteraction);
+        if (isDrawingAllowed()) {
+          mapInstanceRef.current.addInteraction(drawInteraction);
+        } else {
+          setIsDrawShape(false);
+          alert("Please remove the existing shape before drawing a new one");
+        }
       } else {
         mapInstanceRef.current.removeInteraction(drawInteraction);
         vectorSourceRef.current.clear();
         setCurrentFeature(null);
         removeAllOverlays();
+        // Clean up mask layer
+        if (maskLayerRef.current) {
+          mapInstanceRef.current.removeLayer(maskLayerRef.current);
+          maskLayerRef.current = null;
+        }
       }
     }
   };
@@ -760,6 +804,127 @@ const DefaultMapScreen = () => {
     };
   };
 
+  // Add this effect to update mask when view changes
+  useEffect(() => {
+    if (mapInstanceRef.current && currentFeature) {
+      const updateMaskOnViewChange = () => {
+        updateMask(currentFeature);
+      };
+
+      // Listen for view changes
+      mapInstanceRef.current
+        .getView()
+        .on("change:resolution", updateMaskOnViewChange);
+      mapInstanceRef.current
+        .getView()
+        .on("change:center", updateMaskOnViewChange);
+
+      return () => {
+        // Clean up listeners
+        mapInstanceRef.current
+          ?.getView()
+          .un("change:resolution", updateMaskOnViewChange);
+        mapInstanceRef.current
+          ?.getView()
+          .un("change:center", updateMaskOnViewChange);
+      };
+    }
+  }, [currentFeature]);
+
+  // Add this effect to handle map source changes
+  useEffect(() => {
+    if (mapInstanceRef.current && currentFeature) {
+      // Update mask when map source changes
+      updateMask(currentFeature);
+    }
+  }, [currentMapSource]); // Add currentMapSource as dependency
+
+  // Modify the updateMask function to handle empty states
+  const updateMask = (feature: Feature | null) => {
+    if (!mapInstanceRef.current) return;
+
+    // Remove existing mask layer if it exists
+    if (maskLayerRef.current) {
+      mapInstanceRef.current.removeLayer(maskLayerRef.current);
+      maskLayerRef.current = null;
+    }
+
+    // If there's no feature, just return after removing the mask
+    if (!feature) return;
+
+    // Create a mask source
+    const maskSource = new VectorSource();
+
+    // Get the map extent and expand it to ensure full coverage
+    const view = mapInstanceRef.current.getView();
+    const extent = view.calculateExtent(mapInstanceRef.current.getSize());
+
+    // Expand the extent to ensure full coverage
+    const expandedExtent = [
+      extent[0] - (extent[2] - extent[0]),
+      extent[1] - (extent[3] - extent[1]),
+      extent[2] + (extent[2] - extent[0]),
+      extent[3] + (extent[3] - extent[1]),
+    ];
+
+    // Create coordinates for the outer ring (expanded extent)
+    const outerRing = [
+      [expandedExtent[0], expandedExtent[1]],
+      [expandedExtent[2], expandedExtent[1]],
+      [expandedExtent[2], expandedExtent[3]],
+      [expandedExtent[0], expandedExtent[3]],
+      [expandedExtent[0], expandedExtent[1]],
+    ];
+
+    // Get the geometry of the feature
+    const geometry = feature.getGeometry();
+    if (!geometry) return;
+
+    // Create a polygon with a hole
+    const maskPolygon = new Polygon([outerRing, geometry.getCoordinates()[0]]);
+
+    // Create a feature with the mask polygon
+    const maskFeature = new Feature({
+      geometry: maskPolygon,
+    });
+
+    // Add the feature to the source
+    maskSource.addFeature(maskFeature);
+
+    // Create a new vector layer for the mask with higher z-index
+    const maskLayer = new VectorLayer({
+      source: maskSource,
+      style: new Style({
+        fill: new Fill({
+          color: "#FFFFFF66",
+        }),
+        stroke: new Stroke({
+          color: "transparent",
+        }),
+      }),
+      zIndex: 1000,
+    });
+
+    // Add the mask layer to the map
+    mapInstanceRef.current.addLayer(maskLayer);
+    maskLayerRef.current = maskLayer;
+  };
+
+  // Add this effect to clean up mask when vector source is cleared
+  useEffect(() => {
+    if (mapInstanceRef.current && !currentFeature) {
+      if (maskLayerRef.current) {
+        mapInstanceRef.current.removeLayer(maskLayerRef.current);
+        maskLayerRef.current = null;
+      }
+    }
+  }, [currentFeature]);
+
+  // Add a function to check if drawing is allowed
+  const isDrawingAllowed = () => {
+    return vectorSourceRef.current.getFeatures().length === 0;
+  };
+
   return (
     <div className="w-screen h-screen">
       <DefaultMapHeader
@@ -767,6 +932,7 @@ const DefaultMapScreen = () => {
         setIsDrawShape={setIsDrawShape}
         onSaveOptionSelect={handleSaveOptionSelect}
         hasDrawnShape={!!currentFeature}
+        isDrawingAllowed={isDrawingAllowed()}
       />
       <MapAreaTool onMapSourceChange={handleMapSourceChange} />
       <div ref={mapRef} className="w-full h-[calc(100vh-5rem)]" />
