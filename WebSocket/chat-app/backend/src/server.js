@@ -6,7 +6,7 @@ import "./config/database.js";
 import { authRouter } from "./routers/auth.router.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { messageRouter } from "./routers/messages.router.js";
-const app = express();
+import { app, server } from "./utils/socket.js";
 
 app.use(
   cors({
@@ -30,6 +30,6 @@ app.use("/api/v1/messages", messageRouter);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`server running on port ${PORT}`);
 });

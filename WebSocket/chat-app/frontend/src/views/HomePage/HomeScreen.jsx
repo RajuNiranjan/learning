@@ -3,10 +3,13 @@ import { useChatStore } from "../../zustand/chat.store";
 import { SideBar } from "./components/SideBar";
 import { NoChatSelected } from "./components/NoChatSelected";
 import { ChatContainer } from "./components/ChatContainer";
+import { useAuthStore } from "../../zustand/auth.store";
 
 const HomeScreen = () => {
   const { selectedUser } = useChatStore();
+  const { onlineUsers } = useAuthStore();
 
+  console.log(onlineUsers);
   return (
     <div className="h-screen bg-base-200">
       <div className="flex items-center justify-center pt-20 px-4">

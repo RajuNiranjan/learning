@@ -6,7 +6,7 @@ import { MessageInput } from "./MessageInput";
 import { useAuthStore } from "../../../zustand/auth.store";
 
 export const ChatContainer = () => {
-  const { messages, selectedUser, isMessageLoading, getMessages } =
+  const { messages, selectedUser, isMessageLoading, getMessages, subscribeToMessages, unsubscribeToMessages } =
     useChatStore();
 
   const { user } = useAuthStore();
@@ -15,19 +15,23 @@ export const ChatContainer = () => {
 
   useEffect(() => {
     getMessages(selectedUser._id);
-  }, [selectedUser._id, getMessages]);
+    subscribeToMessages();
+    return () => {
+      unsubscribeToMessages();
+    };
+  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeToMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
+ 
   if (isMessageLoading) {
     return (
       <div className="flex-1 flex-col overflow-auto">
         <ChatHeader />
-        <MessageSkeleton />
+        <MessageSkeleton /> 
         <MessageInput />
       </div>
     );

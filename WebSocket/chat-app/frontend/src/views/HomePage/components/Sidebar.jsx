@@ -52,7 +52,7 @@ export const SideBar = () => {
                   className="absolute bottom-0 right-0 size-3 bg-green-500 
                   rounded-full ring-2 ring-zinc-900"
                 />
-              )}
+              ) }
             </div>
 
             {/* User info - only visible on larger screens */}
