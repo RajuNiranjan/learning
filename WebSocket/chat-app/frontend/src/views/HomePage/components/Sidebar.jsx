@@ -43,7 +43,7 @@ export const SideBar = () => {
           >
             <div className="relative mx-auto lg:mx-0">
               <img
-                src={user.profile_picture || "/avatar.png"}
+                src={user.profile_picture || "/user.svg"}
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />

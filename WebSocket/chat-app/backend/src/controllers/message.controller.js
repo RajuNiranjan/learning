@@ -46,18 +46,22 @@ export const sendMessage = async (req, res, next) => {
     const { message, image } = req.body;
 
     if (!message && !image) {
-      next(new Error("Message or image is required"));
+      return next({
+        statusCode: 400,
+        message: "Message or image is required",
+      });
     }
 
     let imageURL;
     if (image) {
-      imageURL = (await cloudinary.uploader.upload(image)).secure_url();
+      const uploadResponse = await cloudinary.uploader.upload(image);
+      imageURL = uploadResponse.secure_url;
     }
 
     const newMessage = new MessageModel({
       sender_id: user_id,
       receiver_id,
-      message,
+      message: typeof message === "string" ? message : message?.message || "",
       image: imageURL,
     });
 
