@@ -7,6 +7,11 @@ import { authRouter } from "./routers/auth.router.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { messageRouter } from "./routers/messages.router.js";
 import { app, server } from "./utils/socket.js";
+import path from "path";
+import { NODE_ENV } from "./utils/env_var.js";
+import "";
+
+const __dirname = path.resolve();
 
 app.use(
   cors({
@@ -29,6 +34,13 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/messages", messageRouter);
 
 app.use(errorHandler);
+
+if (NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../../frontend", "dist", "index.html"));
+  });
+}
 
 server.listen(PORT, () => {
   console.log(`server running on port ${PORT}`);

@@ -4,7 +4,7 @@ dev:
 	cd backend && npm run dev & cd frontend && npm run dev
 
 build:
-	cd frontend && npm run build
+	npm run build
 
 app/dev:
 	cd frontend && npm run dev
