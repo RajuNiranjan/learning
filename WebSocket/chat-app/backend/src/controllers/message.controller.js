@@ -5,14 +5,18 @@ import cloudinary from "../utils/cloudinary.js";
 export const getUsers = async (req, res, next) => {
   try {
     const { user_id } = req.user;
-    const users = await UserModel.find({ _id: { $ne: user_id } }).select(
-      "-password"
-    );
+    const users = await UserModel.find({ _id: { $ne: user_id } })
+      .select("-password")
+      .sort({ user_name: 1 });
+
+    if (!users) {
+      return res.status(404).json({ message: "No users found" });
+    }
 
     return res.status(200).json(users);
   } catch (error) {
     console.log(error);
-    next(error);
+    return next(error);
   }
 };
 

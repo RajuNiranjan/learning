@@ -83,6 +83,7 @@ const SignUpScreen = () => {
                 </div>
                 <input
                   type="email"
+                  name="email"
                   className={`input input-bordered w-full pl-10`}
                   placeholder="you@example.com"
                   value={formData.email}
@@ -102,6 +103,7 @@ const SignUpScreen = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   className={`input input-bordered w-full pl-10`}
                   placeholder="••••••••"
                   value={formData.password}
