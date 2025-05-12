@@ -8,6 +8,7 @@ interface DefaultMapHeaderProps {
   setIsDrawShape: (value: boolean) => void;
   onSaveOptionSelect: (option: string) => void;
   hasDrawnShape: boolean;
+  isDrawingAllowed: boolean;
 }
 
 export const DefaultMapHeader = ({
@@ -15,7 +16,8 @@ export const DefaultMapHeader = ({
   setIsDrawShape,
   onSaveOptionSelect,
   hasDrawnShape,
-}: DefaultMapHeaderProps) => {
+}: // isDrawingAllowed,
+DefaultMapHeaderProps) => {
   const [saveSource, setSaveSource] = useState("Save");
 
   const handleSaveSourceChange = (value: string) => {

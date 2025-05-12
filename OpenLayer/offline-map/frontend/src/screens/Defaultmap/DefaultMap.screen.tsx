@@ -5,7 +5,7 @@ import { fromLonLat, Projection, toLonLat } from "ol/proj";
 import { OSM } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import { useEffect, useRef, useState } from "react";
-import { CoordianteCard } from "./components/CoordianteCard";
+// import { CoordianteCard } from "./components/CoordianteCard";
 import Draw, { createBox } from "ol/interaction/Draw";
 import { Polygon } from "ol/geom";
 import { TileDownlodOptionCard } from "./components/TileDownlodOptionCard";
@@ -115,7 +115,14 @@ const DefaultMapScreen = () => {
       mapInstanceRef.current.getOverlays().clear();
     }
   };
-
+  /**
+   * Removes all overlays from the map instance.
+   *
+   * This function clears all overlays that have been added to the current map instance.
+   * It is useful for resetting the map's overlay state, ensuring that no overlays
+   * are displayed. This can be particularly helpful when you want to remove temporary
+   * overlays or reset the map to a clean state.
+   */
   const createCloseOverlay = (feature: Feature, map: Map) => {
     const geometry = feature.getGeometry();
     if (geometry instanceof Polygon) {
@@ -191,7 +198,6 @@ const DefaultMapScreen = () => {
       setIsDownloadTileDialogOpen(false);
       setShowDownloadStatus(true);
 
-      // Persist state at the start of download
       persistDownloadState({
         isDownloading: true,
         showDownloadStatus: true,
@@ -265,6 +271,10 @@ const DefaultMapScreen = () => {
     }
   };
 
+  /**
+   * Handles the closing of the download status dialog.
+   * @returns void
+   */
   const handleDownloadStatusClose = () => {
     setShowDownloadStatus(false);
     setDownloadProgress(0);
@@ -653,6 +663,10 @@ const DefaultMapScreen = () => {
     setCurrentMapSource(source);
   };
 
+  /**
+   * Handles the cancellation of a download.
+   * @returns void
+   */
   const handleCancelDownload = async () => {
     try {
       const response = await fetch("/api/v1/tile/cancel-download", {
@@ -684,25 +698,32 @@ const DefaultMapScreen = () => {
     }
   };
 
+  /**
+   * Handles the connection to the socket.
+   * @returns void
+   */
   useEffect(() => {
-    const newSocket = io("http://localhost:5000"); // Replace with your server URL/port
-    setSocket(newSocket);
+    const socket = io("http://localhost:5000");
+    setSocket(socket);
 
-    newSocket.on("connect", () => {
-      setSocketId(newSocket.id || null);
+    socket.on("connect", () => {
+      setSocketId(socket.id || null);
     });
 
-    newSocket.on("downloadProgress", (data) => {
+    socket.on("downloadProgress", (data) => {
       setDownloadProgress(data.progress);
       setShowDownloadStatus(true);
     });
 
     return () => {
-      newSocket.disconnect();
+      socket.disconnect();
     };
   }, []);
 
-  // Restore download state on mount
+  /**
+   * Handles the restoration of the download state on mount.
+   * @returns void
+   */
   useEffect(() => {
     const persisted = getPersistedDownloadState();
     if (persisted && persisted.isDownloading) {
@@ -714,7 +735,10 @@ const DefaultMapScreen = () => {
     }
   }, []);
 
-  // Persist state on change
+  /**
+   * Persists the download state on change.
+   * @returns void
+   */
   useEffect(() => {
     persistDownloadState({
       isDownloading,
@@ -725,7 +749,10 @@ const DefaultMapScreen = () => {
     });
   }, [isDownloading, showDownloadStatus, downloadProgress, isDownloadComplete]);
 
-  // On socket connect, if a download is in progress, re-emit a "resume" event
+  /**
+   * Handles the reconnection of the socket on connect.
+   * @returns void
+   */
   useEffect(() => {
     if (socket && isDownloading) {
       const persisted = getPersistedDownloadState();
@@ -737,7 +764,10 @@ const DefaultMapScreen = () => {
     }
   }, [socket, isDownloading]);
 
-  // Remove or increase the auto-close timer (optional)
+  /**
+   * Handles the auto-close timer for the download status.
+   * @returns void
+   */
   useEffect(() => {
     if (isDownloadComplete) {
       const timer = setTimeout(() => {
@@ -747,7 +777,12 @@ const DefaultMapScreen = () => {
     }
   }, [isDownloadComplete]);
 
-  const calculateCenter = (geometry: any) => {
+  /**
+   * Calculates the center of the geometry.
+   * @param geometry - The geometry to calculate the center of.
+   * @returns void
+   */
+  const calculateCenter = (geometry: Geometry) => {
     let center, coordinates, minRadius;
     const type = geometry.getType();
     if (type === "Polygon") {
@@ -787,7 +822,10 @@ const DefaultMapScreen = () => {
     };
   };
 
-  // Add this effect to update mask when view changes
+  /**
+   * Handles the updating of the mask when the view changes.
+   * @returns void
+   */
   useEffect(() => {
     if (mapInstanceRef.current && currentFeature) {
       const updateMaskOnViewChange = () => {
@@ -814,7 +852,10 @@ const DefaultMapScreen = () => {
     }
   }, [currentFeature]);
 
-  // Add this effect to handle map source changes
+  /**
+   * Handles the updating of the mask when the map source changes.
+   * @returns void
+   */
   useEffect(() => {
     if (mapInstanceRef.current && currentFeature) {
       // Update mask when map source changes
@@ -822,7 +863,10 @@ const DefaultMapScreen = () => {
     }
   }, [currentMapSource]); // Add currentMapSource as dependency
 
-  // Modify the updateMask function to handle empty states
+  /**
+   * Handles the updating of the mask when the map source changes.
+   * @returns void
+   */
   const updateMask = (feature: Feature | null) => {
     if (!mapInstanceRef.current) return;
 
@@ -893,7 +937,10 @@ const DefaultMapScreen = () => {
     maskLayerRef.current = maskLayer;
   };
 
-  // Add this effect to clean up mask when vector source is cleared
+  /**
+   * Handles the cleaning up of the mask when the vector source is cleared.
+   * @returns void
+   */
   useEffect(() => {
     if (mapInstanceRef.current && !currentFeature) {
       if (maskLayerRef.current) {
@@ -903,7 +950,10 @@ const DefaultMapScreen = () => {
     }
   }, [currentFeature]);
 
-  // Add a function to check if drawing is allowed
+  /**
+   * Checks if drawing is allowed.
+   * @returns boolean
+   */
   const isDrawingAllowed = () => {
     return vectorSourceRef.current.getFeatures().length === 0;
   };

@@ -99,3 +99,29 @@ export async function downloadTile(
     downloadSemaphore.release();
   }
 }
+
+export const genBase64Image = async (thumbnailTile, zoomLevel, mapSource) => {
+  const url =
+    mapSource === "Google Map"
+      ? `https://mt1.google.com/vt/lyrs=s&x=${thumbnailTile.x}&y=${thumbnailTile.y}&z=${zoomLevel}`
+      : `https://tile.openstreetmap.org/${zoomLevel}/${thumbnailTile.x}/${thumbnailTile.y}.png`;
+
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "OfflineMapTool/1.0",
+      Accept: "image/png,image/*",
+      ...(mapSource === "Google Map" && { Referer: "http://localhost" }),
+    },
+    timeout: 3000,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const buffer = await response.arrayBuffer();
+  const uint8Array = new Uint8Array(buffer);
+  const base64Image = Buffer.from(uint8Array).toString("base64");
+
+  return base64Image;
+};

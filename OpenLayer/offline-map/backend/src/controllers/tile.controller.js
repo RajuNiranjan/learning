@@ -1,7 +1,11 @@
 import { lonLatToTile, ensureDirSync } from "../utils/tileHelpers.js";
 import path from "path";
 import fs from "fs";
-import { downloadTile, cancelFlags } from "../utils/downloadTile.js";
+import {
+  downloadTile,
+  cancelFlags,
+  genBase64Image,
+} from "../utils/downloadTile.js";
 import {
   createTileService,
   deleteTileService,
@@ -12,12 +16,27 @@ import {
 import os from "os";
 import archiver from "archiver";
 import { io } from "../utils/socket.js";
+import AdmZip from "adm-zip";
 
 /**
- * Download the tiles from the GCS bucket and save it to the local machine
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Downloads tiles from Google Cloud Storage/ Openlayers based on the provided parameters.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body.
+ * @param {string} req.body.folderName - The name of the folder to store tiles.
+ * @param {number} req.body.minLon - The minimum longitude of the area.
+ * @param {number} req.body.minLat - The minimum latitude of the area.
+ * @param {number} req.body.maxLon - The maximum longitude of the area.
+ * @param {number} req.body.maxLat - The maximum latitude of the area.
+ * @param {Array<number>} req.body.extent - The extent of the area.
+ * @param {Array<number>} req.body.center - The center coordinates of the area.
+ * @param {string} req.body.projection - The projection type.
+ * @param {string} req.body.mapSource - The source of the map tiles.
+ * @param {string} req.body.socketId - The socket ID for real-time updates.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
+
 export const downloadTilesGCS = async (req, res) => {
   const {
     folderName,
@@ -154,10 +173,24 @@ export const downloadTilesGCS = async (req, res) => {
 };
 
 /**
- * Download the tiles from the local machine and save it to the local machine as zip file
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Downloads tiles from the local disk based on the provided parameters.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body.
+ * @param {string} req.body.folderName - The name of the folder to store tiles.
+ * @param {number} req.body.minLon - The minimum longitude of the area.
+ * @param {number} req.body.minLat - The minimum latitude of the area.
+ * @param {number} req.body.maxLon - The maximum longitude of the area.
+ * @param {number} req.body.maxLat - The maximum latitude of the area.
+ * @param {Array<number>} req.body.extent - The extent of the area.
+ * @param {Array<number>} req.body.center - The center coordinates of the area.
+ * @param {string} req.body.projection - The projection type.
+ * @param {string} req.body.mapSource - The source of the map tiles.
+ * @param {string} req.body.socketId - The socket ID for real-time updates.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
+
 export const downloadTilesDisk = async (req, res) => {
   const {
     folderName,
@@ -176,9 +209,16 @@ export const downloadTilesDisk = async (req, res) => {
   const socketId = req.body.socketId;
 
   try {
+    const thumbnailTile = lonLatToTile(center[0], center[1], zoomLevel);
+    const thumbnailBase64 = await genBase64Image(
+      thumbnailTile,
+      zoomLevel,
+      mapSource
+    );
+
     const downloadsPath = path.join(os.homedir(), "Downloads");
     const baseFolderPath = path.join(downloadsPath, folderName);
-    const tilesFolderPath = path.join(baseFolderPath, `${folderName}_tiles`);
+    const tilesFolderPath = path.join(baseFolderPath, `${folderName}`);
     const jsonFilePath = path.join(baseFolderPath, `${folderName}.json`);
 
     ensureDirSync(fs, tilesFolderPath);
@@ -193,7 +233,8 @@ export const downloadTilesDisk = async (req, res) => {
       center,
       projection,
       mapSource,
-      zoomLevel,
+      zoomLevel: [MIN_ZOOM, MAX_ZOOM],
+      thubmnailbase64img: thumbnailBase64,
     };
 
     fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2));
@@ -299,10 +340,15 @@ export const downloadTilesDisk = async (req, res) => {
 };
 
 /**
- * Cancel the download of the tiles
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Cancels a tile download operation.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body.
+ * @param {string} req.body.folderName - The name of the folder to store tiles.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
+
 export const cancelDownload = async (req, res) => {
   try {
     const { folderName } = req.body;
@@ -311,10 +357,7 @@ export const cancelDownload = async (req, res) => {
     // Disk download paths
     const downloadsPath = path.join(os.homedir(), "Downloads");
     const diskFolderPath = path.join(downloadsPath, folderName);
-    const diskTilesFolderPath = path.join(
-      diskFolderPath,
-      `${folderName}_tiles`
-    );
+    const diskTilesFolderPath = path.join(diskFolderPath, `${folderName}`);
     const diskZipFilePath = path.join(downloadsPath, `${folderName}.zip`);
 
     if (!folderName) {
@@ -368,9 +411,12 @@ export const cancelDownload = async (req, res) => {
 };
 
 /**
- * Get all the tiles from the database
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Retrieves all tiles from the database.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
 export const getAllTiles = async (req, res) => {
   try {
@@ -383,9 +429,13 @@ export const getAllTiles = async (req, res) => {
 };
 
 /**
- * Get the tile by the id from the database
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Retrieves a tile by its ID.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.id - The ID of the tile to retrieve.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
 export const getTileById = async (req, res) => {
   try {
@@ -402,9 +452,13 @@ export const getTileById = async (req, res) => {
 };
 
 /**
- * Delete the tile by the id from the database
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Deletes a tile by its ID.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.id - The ID of the tile to delete.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
 export const deleteTile = async (req, res) => {
   try {
@@ -428,9 +482,16 @@ export const deleteTile = async (req, res) => {
 };
 
 /**
- * Serve a single tile image as PNG
- * @param {Object} req - The request object containing parameters and body data
- * @param {Object} res - The response object used to send back the desired HTTP response
+ * Retrieves a tile image by its ID, zoom level, x, and y coordinates.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.tileId - The ID of the tile.
+ * @param {string} req.params.z - The zoom level.
+ * @param {string} req.params.x - The x coordinate.
+ * @param {string} req.params.y - The y coordinate.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
  */
 export const getTileImage = async (req, res) => {
   try {
@@ -450,6 +511,18 @@ export const getTileImage = async (req, res) => {
     res.status(500).send("Internal server error");
   }
 };
+
+/**
+ * Updates a tile by its ID.
+ * updating the folder name of the tile
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body.
+ * @param {string} req.body.folderName - The name of the folder to store tiles.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.tileId - The ID of the tile to update.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ */
 
 export const updateTile = async (req, res) => {
   try {
@@ -474,6 +547,82 @@ export const updateTile = async (req, res) => {
       message: "Tile updated successfully and folder name changed",
       tile: updatedTile,
     });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Uploads a tile folder.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.file - The uploaded file.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ * uploading the tile folder and the json file
+ * the json file contains the tile data
+ * the tiles folder stored in the local folders /tiles/folderName
+ * the json file stored in the database
+ * the tile folder and the json file are zipped and uploaded
+ * the zip file is then extracted and the tiles are stored in the local folders
+ * the json file is then stored in the database
+ */
+
+export const uploadTileFolder = async (req, res) => {
+  try {
+    const { file } = req;
+    const zip = new AdmZip(file.buffer);
+    const zipEntries = zip.getEntries();
+    let jsonData = null;
+
+    zipEntries.forEach((entry) => {
+      const entryName = entry.entryName;
+      if (!entry.isDirectory) {
+        if (entryName.endsWith(".json")) {
+          const data = entry.getData().toString("utf8");
+          jsonData = JSON.parse(data);
+        } else {
+          const outputPath = path.join("tiles", entryName);
+          ensureDirSync(fs, path.dirname(outputPath));
+          fs.writeFileSync(outputPath, entry.getData());
+        }
+      }
+    });
+
+    if (jsonData) {
+      const {
+        folderName,
+        minLon,
+        minLat,
+        maxLon,
+        maxLat,
+        extent,
+        center,
+        projection,
+        mapSource,
+        zoomLevel,
+        thubmnailbase64img,
+      } = jsonData;
+
+      const createdTile = await createTileService({
+        name: folderName,
+        minLon,
+        minLat,
+        maxLon,
+        maxLat,
+        extent,
+        center,
+        projection,
+        mapSource,
+        zoom: zoomLevel,
+        thumbnailBase64Img: thubmnailbase64img,
+      });
+
+      res.status(200).json(createdTile);
+    } else {
+      res.status(400).json({ error: "No JSON data found in the zip file" });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server error" });

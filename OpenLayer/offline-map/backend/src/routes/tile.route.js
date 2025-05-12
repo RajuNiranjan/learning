@@ -8,7 +8,9 @@ import {
   cancelDownload,
   getTileImage,
   updateTile,
+  uploadTileFolder,
 } from "../controllers/tile.controller.js";
+import { upload } from "../utils/multer.js";
 
 export const tileRouter = express.Router();
 
@@ -20,3 +22,4 @@ tileRouter.get("/:id", getTileById);
 tileRouter.delete("/:id", deleteTile);
 tileRouter.get("/:tileId/:z/:x/:y.png", getTileImage);
 tileRouter.put("/:tileId", updateTile);
+tileRouter.post("/upload-tile-folder", upload.single("file"), uploadTileFolder);
