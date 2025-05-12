@@ -11,6 +11,7 @@ import {
 } from "../models/tile.model.js";
 import os from "os";
 import archiver from "archiver";
+import { io } from "../utils/socket.js";
 
 /**
  * Download the tiles from the GCS bucket and save it to the local machine
@@ -106,8 +107,8 @@ export const downloadTilesGCS = async (req, res) => {
                   progressHistory.length
               );
 
-              if (req.app.get("io") && socketId) {
-                req.app.get("io").to(socketId).emit("downloadProgress", {
+              if (socketId) {
+                io.to(socketId).emit("downloadProgress", {
                   progress: averageProgress,
                   downloadedTiles,
                   totalTiles,
@@ -249,8 +250,8 @@ export const downloadTilesDisk = async (req, res) => {
                   progressHistory.length
               );
 
-              if (req.app.get("io") && socketId) {
-                req.app.get("io").to(socketId).emit("downloadProgress", {
+              if (socketId) {
+                io.to(socketId).emit("downloadProgress", {
                   progress: averageProgress,
                   downloadedTiles,
                   totalTiles,

@@ -1,4 +1,4 @@
-import { pool } from "../config/db.js";
+import { pool } from "../config/database.js";
 
 export const createTileTable = async () => {
   let tileText = `CREATE TABLE IF NOT EXISTS tile_table(

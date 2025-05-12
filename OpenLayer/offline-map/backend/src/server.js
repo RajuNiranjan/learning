@@ -1,18 +1,17 @@
 import express from "express";
-import { envVar } from "./utils/env.js";
+import { FRONTEND_URL, PORT } from "./utils/env.js";
 import cors from "cors";
 import { tileRouter } from "./routes/tile.route.js";
 import dotenv from "dotenv";
-import { pool } from "./config/db.js";
+import { pool } from "./config/database.js";
 import { createTileTable } from "./data/tile.data.js";
-import { Server } from "socket.io";
+import { app, server } from "./utils/socket.js";
 
-const app = express();
 dotenv.config();
 
 app.use(
   cors({
-    origin: envVar.FRONTEND_URL,
+    origin: FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -51,16 +50,6 @@ app.get("/api/v1/test", (req, res) => {
 
 app.use("/api/v1/tile", tileRouter);
 
-const httpServer = app.listen(envVar.PORT, () => {
-  console.log(`Server is running on port ${envVar.PORT}`);
-});
-
-const io = new Server(httpServer, { cors: { origin: "*" } });
-app.set("io", io);
-
-io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-  });
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

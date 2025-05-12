@@ -86,7 +86,6 @@ const DefaultMapScreen = () => {
   const [selectedSaveOption, setSelectedSaveOption] = useState<string | null>(
     null
   );
-  console.log("selectedSaveOption", selectedSaveOption);
 
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloadComplete, setIsDownloadComplete] = useState(false);
@@ -95,18 +94,6 @@ const DefaultMapScreen = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [socketId, setSocketId] = useState<string | null>(null);
 
-  console.log("downloadProgress", downloadProgress);
-
-  // const style = new Style({
-  // stroke: new Stroke({
-  // color: "#909093",
-  // width: 3,
-  // }),
-  // });
-
-  if (error) {
-    console.log(error);
-  }
   const projection = new Projection({
     code: "EPSG:3857",
     units: "m",
@@ -166,8 +153,6 @@ const DefaultMapScreen = () => {
           mapInstanceRef.current.removeLayer(maskLayerRef.current);
           maskLayerRef.current = null;
         }
-        // Keep isDrawShape true to allow drawing again immediately
-        // setIsDrawShape(false); // Remove this line
       });
     }
   };
@@ -188,8 +173,6 @@ const DefaultMapScreen = () => {
           mapInstanceRef.current.removeLayer(maskLayerRef.current);
           maskLayerRef.current = null;
         }
-        // Keep isDrawShape true to allow drawing again immediately
-        // setIsDrawShape(false); // Remove this line
       }
     }
   };
@@ -936,7 +919,7 @@ const DefaultMapScreen = () => {
       />
       <MapAreaTool onMapSourceChange={handleMapSourceChange} />
       <div ref={mapRef} className="w-full h-[calc(100vh-5rem)]" />
-      <CoordianteCard coordinates={coordinates} />
+      {/* <CoordianteCard coordinates={coordinates} /> */}
       <ZoomControls
         mapInstanceRef={mapInstanceRef as React.RefObject<Map>}
         zoomLevel={zoomLevel}

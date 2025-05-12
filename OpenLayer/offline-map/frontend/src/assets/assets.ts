@@ -7,6 +7,9 @@ import FolerIcon from './folder-fill.svg'
 import VeticalEllipsisIcon from './vertial-ellipsis.svg'
 import XIcon from './x.svg'
 import PencilIcon from './pencil.svg'
+import EditIcon from './edit.svg'
+import UploadIcon from './upload.svg'
+import SkytexLogo from './skytex_logo.svg'
 
 export {
     ArrowLeftIcon,
@@ -18,4 +21,7 @@ export {
   VeticalEllipsisIcon,
   XIcon,
   PencilIcon,
+  EditIcon,
+  UploadIcon,
+  SkytexLogo,
 };

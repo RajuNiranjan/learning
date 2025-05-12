@@ -38,7 +38,7 @@ export async function downloadTile(
   x,
   y,
   outputPath,
-  mapSource = "OSM",
+  mapSource,
   retries = 3
 ) {
   const url =
