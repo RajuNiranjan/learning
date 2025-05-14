@@ -1,5 +1,5 @@
 import { useDispatch,  } from 'react-redux'
-import {signupFailure,signupStart,signupSuccess} from '../redux/actions/auth.slice'
+import {signupFailure,signupStart,signupSuccess,LoginFailure,LoginStart,LoginSuccess,checkAuthFailure,checkAuthStart,checkAuthSuccess} from '../redux/actions/auth.slice'
 import type { AppDispatch, } from '../redux/store'
 import {axiosInstance} from '../utils/axios'
 
@@ -25,6 +25,30 @@ export const useAuth = () => {
         } 
     }
 
+    const login = async (data: { emailOrUserName: string; password: string }) => {
+        try {
+            dispatch(LoginStart())
+            const res = await axiosInstance.post('/api/auth/login', data)
+            dispatch(LoginSuccess(res.data))
+        } catch (error) {
+            console.log(error);
+            dispatch(LoginFailure())
+            
+        }
+    }
 
-    return {signup}
+    const checkAuth = async () => {
+        try {
+            dispatch(checkAuthStart())
+            const res = await axiosInstance.get("/api/auth/user")
+            dispatch(checkAuthSuccess(res.data))
+        } catch (error) {
+            console.log(error);
+            dispatch(checkAuthFailure())
+            
+        }
+    }
+
+
+    return {signup, login, checkAuth}
 }
