@@ -1,6 +1,15 @@
+import { LogoutIcon } from "../assets";
+import { useAuth } from "../hooks/useAuth";
 const WelcomeScreen = () => {
+  const { logout } = useAuth();
   return (
     <div className="min-h-screen w-full bg-gradient-to-tr from-purple-700 via-indigo-800 to-blue-900 flex items-center justify-center p-4">
+      <img
+        src={LogoutIcon}
+        alt=""
+        className="absolute top-0 right-0 m-4 invert cursor-pointer"
+        onClick={logout}
+      />
       <div className="w-full max-w-7xl flex flex-col lg:flex-row rounded-3xl overflow-hidden shadow-2xl">
         {/* Left side - Hero content */}
         <div className="w-full lg:w-1/2 bg-white p-8 lg:p-16 relative z-10">

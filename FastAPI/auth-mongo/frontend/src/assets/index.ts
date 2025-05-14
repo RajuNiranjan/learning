@@ -7,6 +7,7 @@ import BellIcon from './bell.svg'
 import XIcon from './x.svg'
 import SendIcon from './send.svg'
 import EllipsIcon from './ellips.svg'
+import LogoutIcon from './logout.svg'
 
 
-export { GroupLogo, Loader, EyeOpenIcon, EyeCloseIcon, MessageIcon, BellIcon, XIcon, SendIcon, EllipsIcon }
+export { GroupLogo, Loader, EyeOpenIcon, EyeCloseIcon, MessageIcon, BellIcon, XIcon, SendIcon, EllipsIcon, LogoutIcon }

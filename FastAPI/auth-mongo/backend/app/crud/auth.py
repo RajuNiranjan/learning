@@ -1,6 +1,6 @@
 from ..config.database import user_collection
 from ..models.user import SignUp, LogIn
-from fastapi import HTTPException
+from fastapi import HTTPException,Response
 from fastapi.responses import JSONResponse
 from ..utils.hashing import hash_password, validate_password
 from ..utils.token import gen_token
@@ -78,3 +78,7 @@ async def check_auth_service(userId:str):
     else:
         raise HTTPException(status_code=404, detail="User not found")
     
+
+def logout_service(res: Response):
+    res.delete_cookie("jwt")
+    return {"message": "Logged out successfully"}

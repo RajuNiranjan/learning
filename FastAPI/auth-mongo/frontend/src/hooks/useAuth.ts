@@ -1,5 +1,5 @@
 import { useDispatch,  } from 'react-redux'
-import {signupFailure,signupStart,signupSuccess,LoginFailure,LoginStart,LoginSuccess,checkAuthFailure,checkAuthStart,checkAuthSuccess} from '../redux/actions/auth.slice'
+import {signupFailure,signupStart,signupSuccess,LoginFailure,LoginStart,LoginSuccess,checkAuthFailure,checkAuthStart,checkAuthSuccess, logoutStatus} from '../redux/actions/auth.slice'
 import type { AppDispatch, } from '../redux/store'
 import {axiosInstance} from '../utils/axios'
 
@@ -49,6 +49,16 @@ export const useAuth = () => {
         }
     }
 
+    const logout = async () => {
+        try {
+            await axiosInstance.post('/api/auth/logout')
+            dispatch(logoutStatus())
+        } catch (error) {
+            console.log(error);
+            
+        }
+    }
 
-    return {signup, login, checkAuth}
+
+    return {signup, login, checkAuth, logout}
 }

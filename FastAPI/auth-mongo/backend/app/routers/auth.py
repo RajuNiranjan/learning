@@ -1,6 +1,6 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Response
 from ..models.user import User, SignUp, LogIn
-from ..crud.auth import signup_service,login_service,check_auth_service
+from ..crud.auth import signup_service,login_service,check_auth_service, logout_service
 from ..utils.token import get_current_user
 
 auth_router = APIRouter(
@@ -19,3 +19,7 @@ async def login(user:LogIn):
 @auth_router.get('/user',status_code=status.HTTP_200_OK)
 async def get_user(current_use:dict = Depends(get_current_user)):
     return await check_auth_service(current_use["userId"])
+
+@auth_router.post('/logout')
+def logout(res:Response):
+    return logout_service(res)
