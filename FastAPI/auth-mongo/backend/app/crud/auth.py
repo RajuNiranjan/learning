@@ -4,6 +4,8 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from ..utils.hashing import hash_password, validate_password
 from ..utils.token import gen_token
+from bson import ObjectId
+from bson.errors import InvalidId
 
 
 
@@ -67,5 +69,12 @@ async def login_service(user_data: LogIn):
     )
     return res
 
-async def check_auth_service(userId):
-    return userId
+async def check_auth_service(userId:str):
+    user = await user_collection.find_one({"_id": ObjectId(userId)})
+    if user:
+        user["_id"] = str(user["_id"])  
+        user.pop("password",None)
+        return user
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+    
