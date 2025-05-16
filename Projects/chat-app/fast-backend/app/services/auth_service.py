@@ -1,9 +1,9 @@
 from app.config.database import user_collection
 from app.models.user_model import SignUp, LogIn
 from app.utils.hashing import hash_password,verify_password
-from app.utils.token import gen_token
-from fastapi import HTTPException, status, Response
-from fastapi.responses import JSONResponse
+from app.utils.token import gen_token,decode_token
+from fastapi import HTTPException, status, Response, Request
+from bson import ObjectId
 
 
 async def signup_service(user: SignUp, response: Response):
@@ -74,3 +74,16 @@ async def login_server(user:LogIn, response:Response):
     )
 
     return user_data
+
+
+async def check_auth_server(req:Request):
+    user_id= decode_token(req)
+    user = await user_collection.find_one({"_id":ObjectId(user_id)})
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    
+    user.pop("password",None)
+    user["_id"]=str(user['_id'])
+
+    return user
