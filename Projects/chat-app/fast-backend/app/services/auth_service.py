@@ -87,3 +87,7 @@ async def check_auth_server(req:Request):
     user["_id"]=str(user['_id'])
 
     return user
+
+def logout_service(res:Response):
+    res.delete_cookie("jwt")
+    return {"message":"logout successfully"}
