@@ -1,5 +1,5 @@
 from app.config.database import user_collection
-from app.models.user_model import UserBaseModel, SignUp, LogIn
+from app.models.user_model import SignUp, LogIn
 from app.utils.hashing import hash_password,verify_password
 from app.utils.token import gen_token
 from fastapi import HTTPException, status, Response
@@ -20,22 +20,18 @@ async def signup_service(user: SignUp, response: Response):
     hashed_password = hash_password(user.password)
     profile_pic = f"https://avatar.iran.liara.run/username?username={user.username}"
 
-    user_dict = user.model_dump()
-    user_dict['password'] = hashed_password
-    user_dict['profile_pic'] = profile_pic
-
-    result = await user_collection.insert_one(user_dict)
-    if not result.inserted_id:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user")
-    
-    user_data = {
-        "id": str(result.inserted_id),
-        "username": user.username,
-        "email": user.email,
-        "profile_pic": profile_pic
+    new_user = {
+        "username":user.username,
+        "email":user.email,
+        "password":hashed_password,
+        "profile_pic":profile_pic
     }
 
-    token = gen_token(user_data["id"])
+    result = await user_collection.insert_one(new_user)
+    new_user["_id"]=str(result.inserted_id)
+    new_user.pop("password", None)
+
+    token = gen_token(str(new_user["_id"]))
 
     response.set_cookie(
         key="jwt",
@@ -46,6 +42,6 @@ async def signup_service(user: SignUp, response: Response):
         samesite="lax"
     )
 
-    return user_data
+    return new_user
 
 
