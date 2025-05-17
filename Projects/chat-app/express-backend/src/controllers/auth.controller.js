@@ -101,3 +101,16 @@ export const logout_controller = async (req, res, next) => {
     next(error);
   }
 };
+
+export const checkAuth = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+
+    const user = await userModel.findById(userId).select("-password");
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
