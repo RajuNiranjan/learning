@@ -11,11 +11,11 @@ app.use(express.json());
 app.use(
   cors({
     origin: FRONT_END_ORIGIN,
-    allowedHeaders: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
+
 app.use(coockieParser());
 app.use(errorHandler);
 
