@@ -3,8 +3,8 @@ import LogInScreen from "./views/LoginScree";
 import SignUpScreen from "./views/SignUpScreen";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { fetchUser } from "./redux/actions/auth.slice";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "./redux/store";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "./redux/store";
 import { PrivateRoutes, PublicRoutes } from "./utils/ProtectRoutes";
 import WelcomeScreen from "./views/WelcomeScreen";
 
@@ -14,9 +14,6 @@ const App = () => {
   useEffect(() => {
     dispatch(fetchUser());
   }, []);
-
-  const { user } = useSelector((state: RootState) => state.auth);
-  console.log(user);
 
   return (
     <Routes>
