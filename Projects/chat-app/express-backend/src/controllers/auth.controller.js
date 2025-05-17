@@ -88,3 +88,16 @@ export const login_controller = async (req, res, next) => {
     console.log(error);
   }
 };
+
+export const logout_controller = async (req, res, next) => {
+  try {
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      sameSite: "strict",
+    });
+    return res.status(200).json({ message: "logged out successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
