@@ -1,6 +1,6 @@
 import { gen_token } from "../utils/token.js";
 import { userModel } from "../models/user.model.js";
-import { hashPassword } from "../utils/hashing.js";
+import { hashPassword, validatePassword } from "../utils/hashing.js";
 
 export const signupController = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -45,5 +45,46 @@ export const signupController = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     next(error);
+  }
+};
+
+export const login_controller = async (req, res, next) => {
+  const { emailOrUserName, password } = req.body;
+
+  if (!emailOrUserName || !password) {
+    next({
+      statusCode: 400,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    const user = await userModel.findOne({
+      $or: [{ email: emailOrUserName }, { username: emailOrUserName }],
+    });
+
+    if (!user) {
+      next({
+        statusCode: 404,
+        message: "user not found",
+      });
+    }
+
+    if (!validatePassword(user.password, password)) {
+      next({
+        statusCode: 400,
+        message: "Invalid credentials",
+      });
+    }
+
+    gen_token(user._id, res);
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    return res.status(200).json(userResponse);
+  } catch (error) {
+    next(error);
+    console.log(error);
   }
 };
