@@ -1,0 +1,38 @@
+# Node modules (should be installed inside the container)
+node_modules
+dist
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.env
+.vscode
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional environment files (if used, load via Docker secrets or env vars)
+.env
+.env.*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# Git and other version control
+.git
+.gitignore
+
+# Docker-related files
+Dockerfile
+.dockerignore
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+
+# Test coverage
+coverage
