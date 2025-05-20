@@ -6,6 +6,7 @@ import helmet from "helmet";
 import "./config/database.js";
 import { PORT, FRONT_END_ORIGIN } from "./utils/envVar.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { authRouter } from "./routers/auth.router.js";
 
 const app = express();
 
@@ -33,6 +34,8 @@ app.get("/", (req, res) => {
 app.get("/test", (req, res) => {
   res.json({ message: "Welcome to Blinkit test server" });
 });
+
+app.use("/api/v1/auth", authRouter);
 
 app.listen(PORT, () => {
   console.log(`server is running at port: ${PORT}`);

@@ -8,4 +8,5 @@ export const {
   FRONT_END_ORIGIN,
   JWT_SECRET,
   JWT_EXPIRES_IN,
+  RESEND_API_KEY,
 } = process.env;
