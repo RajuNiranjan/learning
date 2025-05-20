@@ -1,0 +1,16 @@
+{
+  "name": "docker-mern-auth",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "api:i": "npm install --prefix backend",
+    "app:i": "npm install --prefix frontend",
+    "api:dev": "npm run dev --prefix backend",
+    "app:dev": "npm run dev --prefix frontend",
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

@@ -1,17 +1,22 @@
 import { useSortable } from "@dnd-kit/sortable";
 import React from "react";
 import { CSS } from "@dnd-kit/utilities";
-type User = {
-  id: number;
-  name: string;
-  eamil: string;
+export type WaypointProp = {
+  coordinates: number[];
+  id: string;
+  altitude: number;
+  heading: number;
+  flightSpeed: number;
+  seqID: number;
+  routine: {
+    type: string;
+  };
+  type: string;
 };
 
-export const UserItem: React.FC<{ user: User }> = ({ user }) => {
-  const { id, name, eamil } = user;
-
+export const UserItem = ({ waypoint }: WaypointProp) => {
   const { attributes, listeners, setNodeRef, transition, transform } =
-    useSortable({ id });
+    useSortable({ id: waypoint.id });
 
   return (
     <div
@@ -20,14 +25,10 @@ export const UserItem: React.FC<{ user: User }> = ({ user }) => {
       className="bg-blue-200 p-4 rounded shadow-md flex justify-between items-center"
     >
       <div>
-        <h3 className="text-lg font-semibold">{name}</h3>
-        <p className="text-gray-600">{eamil}</p>
+        <h3 className="text-lg text-black font-semibold">{waypoint.id}</h3>
+        <p className="text-gray-600">{waypoint.seqID}</p>
       </div>
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-move"
-      >
+      <button {...attributes} {...listeners} className="cursor-move">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

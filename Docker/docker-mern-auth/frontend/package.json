@@ -13,7 +13,6 @@
     "@reduxjs/toolkit": "^2.8.1",
     "@tailwindcss/vite": "^4.1.6",
     "axios": "^1.9.0",
-    "chat-app": "file:..",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
