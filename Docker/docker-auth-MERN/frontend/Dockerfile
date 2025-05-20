@@ -1,14 +1,17 @@
-FROM node:18 AS build
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
 
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose port used by React dev server
 EXPOSE 5173
 
-CMD [ "npm","run","dev" ]
-
-
-
+# Start the app in development mode
+CMD ["npm", "run","dev"]

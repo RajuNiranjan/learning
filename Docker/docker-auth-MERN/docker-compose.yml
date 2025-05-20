@@ -34,10 +34,9 @@ services:
   frontend:
     build: ./frontend
     container_name: frontend
-    image: docker-auth-mern-frontend
     restart: always
     ports:
-      - 80:80
+      - 5173:5173
     stdin_open: true
     tty: true
     depends_on:
