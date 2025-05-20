@@ -19,6 +19,10 @@ app.use(
 app.use(coockieParser());
 app.use(errorHandler);
 
+app.get("/", (req, res) => {
+  return res.json({ message: "Welcome to Express.js with Docker" });
+});
+
 app.get("/test", (req, res) => {
   return res.json({ message: "Welcome to Express.js" });
 });

@@ -1,0 +1,26 @@
+version:  '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_URI=mongodb://localhost:27017
+      - JWT_SECRET=SrjPreDDQoM15JgEis7eBREubqOaHwNs3CXTtJj/nSE=
+      - JWT_EXPIRES_IN=1d
+      - FRONT_END_ORIGIN=http://localhost:5173
+      - PORT=8000
+    depends_on:
+      - mongo
+  
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-db:/data/db
+
+volumes:
+  mongo-db:
