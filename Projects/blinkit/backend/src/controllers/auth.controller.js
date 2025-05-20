@@ -1,9 +1,10 @@
 import { UserModel } from "../models/user.model.js";
-import { hashPassword } from "../utils/hashing.js";
-import { gen_token } from "../utils/token.js";
+import { hashPassword, verifyPassword } from "../utils/hashing.js";
+import { genAccessToken, genRefreshToken } from "../utils/token.js";
 import { sendEmail } from "../config/sendEmail.js";
 import { verifyEmailTemplate } from "../templates/verifyEmail.template.js";
 import { FRONT_END_ORIGIN } from "../utils/envVar.js";
+import { uploadImage } from "../utils/cloudinary.js";
 
 export const signup = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -52,6 +53,120 @@ export const signup = async (req, res, next) => {
     delete userRes.password;
 
     return res.status(201).json(userRes);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+
+    const user = await UserModel.findById(code);
+
+    if (!user) {
+      next({
+        statusCode: 400,
+        message: "Invalid Code",
+      });
+    }
+
+    const updateUser = await UserModel.findByIdAndUpdate(
+      code,
+      {
+        verify_email: true,
+      },
+      { new: true }
+    ).select("-password");
+
+    res.status(200).json(updateUser);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const login = async (req, res, next) => {
+  const { emailOrUserName, password } = req.body;
+
+  if (!emailOrUserName || !password) {
+    return next({
+      statusCode: 400,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    const user = await UserModel.findOne({
+      $or: [{ email: emailOrUserName }, { name: emailOrUserName }],
+    });
+    if (!user) {
+      return next({
+        statusCode: 404,
+        message: "user not found",
+      });
+    }
+    if (user.status === "Inactive" || user.status === "Suspended") {
+      return next({
+        statusCode: 400,
+        message: "Contact to Admin",
+      });
+    }
+
+    const validatePassword = await verifyPassword(password, user.password);
+    if (!validatePassword) {
+      return next({
+        statusCode: 400,
+        message: "Invalid credentials",
+      });
+    }
+
+    await genAccessToken(user._id, res);
+    await genRefreshToken(user._id, res);
+    const userRes = user.toObject();
+    delete userRes.password;
+    return res.status(200).json(userRes);
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    console.log("userId", userId);
+
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+
+    await UserModel.findByIdAndUpdate(
+      userId,
+      { refresh_token: "" },
+      { new: true }
+    );
+
+    return res.status(200).json({ message: "user loggedout successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    const image = req.file;
+    const upload = await uploadImage(image);
+
+    await UserModel.findByIdAndUpdate(
+      req.user.userId,
+      { avatar: upload.secure_url },
+      { new: true }
+    );
+
+    return res.status(201).json({ message: "avatar updated" });
   } catch (error) {
     console.log(error);
     next(error);
