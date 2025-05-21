@@ -3,6 +3,7 @@ import {
   login,
   logout,
   signup,
+  updateUserDetails,
   uploadAvatar,
   verifyEmail,
 } from "../controllers/auth.controller.js";
@@ -20,4 +21,5 @@ authRouter.put(
   upload.single("avatar"),
   uploadAvatar
 );
+authRouter.put("/update-user", authGuard, updateUserDetails);
 authRouter.post("/verify-email", verifyEmail);

@@ -122,6 +122,12 @@ export const login = async (req, res, next) => {
       });
     }
 
+    await UserModel.findByIdAndUpdate(
+      user._id,
+      { last_login_data: Date.now() },
+      { new: true }
+    );
+
     await genAccessToken(user._id, res);
     await genRefreshToken(user._id, res);
     const userRes = user.toObject();
@@ -167,6 +173,39 @@ export const uploadAvatar = async (req, res, next) => {
     );
 
     return res.status(201).json({ message: "avatar updated" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const updateUserDetails = async (req, res, next) => {
+  const { userId } = req.user;
+  const { name, email, mobile, password } = req.body;
+
+  let hashedPassword;
+
+  if (password) {
+    hashedPassword = await hashPassword(password);
+  }
+
+  try {
+    const updateUser = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(mobile && { mobile }),
+        ...(password && { password: hashedPassword }),
+      },
+      { new: true }
+    );
+
+    const userRes = updateUser.toObject();
+
+    delete userRes.password;
+
+    return res.status(201).json(userRes);
   } catch (error) {
     console.log(error);
     next(error);
