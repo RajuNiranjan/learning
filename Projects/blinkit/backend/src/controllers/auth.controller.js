@@ -264,3 +264,55 @@ export const forgetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+export const verifyForgotPasswordOTP = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return next({
+      statusCode: 400,
+      message: "all fields are required",
+    });
+  }
+
+  try {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        statusCode: 400,
+        message: "invalid user",
+      });
+    }
+
+    const currentTime = Date.now();
+
+    if (user.forget_password_expiry < currentTime) {
+      return next({
+        statusCode: 400,
+        message: "otp is expired",
+      });
+    }
+
+    if (otp !== user.forget_password_otp) {
+      return next({
+        statusCode: 400,
+        message: "Invalid otp",
+      });
+    }
+
+    await UserModel.findByIdAndUpdate(
+      user._id,
+      {
+        forget_password_expiry: "",
+        forget_password_otp: "",
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({ message: "otp verified successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};

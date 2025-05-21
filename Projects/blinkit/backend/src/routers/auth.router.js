@@ -7,6 +7,7 @@ import {
   updateUserDetails,
   uploadAvatar,
   verifyEmail,
+  verifyForgotPasswordOTP,
 } from "../controllers/auth.controller.js";
 import { authGuard } from "../middleware/authGuard.js";
 import { upload } from "../middleware/multer.js";
@@ -25,3 +26,4 @@ authRouter.put(
 authRouter.put("/update-user", authGuard, updateUserDetails);
 authRouter.post("/forget-password", forgetPassword);
 authRouter.post("/verify-email", verifyEmail);
+authRouter.post("/verify-otp", verifyForgotPasswordOTP);
