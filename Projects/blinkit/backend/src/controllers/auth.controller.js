@@ -3,8 +3,10 @@ import { hashPassword, verifyPassword } from "../utils/hashing.js";
 import { genAccessToken, genRefreshToken } from "../utils/token.js";
 import { sendEmail } from "../config/sendEmail.js";
 import { verifyEmailTemplate } from "../templates/verifyEmail.template.js";
+import { forgotPasswordTemplate } from "../templates/forgetPassword.template.js";
 import { FRONT_END_ORIGIN } from "../utils/envVar.js";
 import { uploadImage } from "../utils/cloudinary.js";
+import { generateOTP } from "../utils/otp.js";
 
 export const signup = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -208,6 +210,57 @@ export const updateUserDetails = async (req, res, next) => {
     return res.status(201).json(userRes);
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+};
+
+export const forgetPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return next({
+      statusCode: 404,
+      message: "email is required",
+    });
+  }
+
+  try {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return next({
+        statusCode: 404,
+        message: "user not found",
+      });
+    }
+
+    const otp = generateOTP();
+    const expiresIn = Date.now() + 60 * 60 * 1000;
+
+    const update = await UserModel.findByIdAndUpdate(
+      user._id,
+      {
+        forget_password_otp: otp,
+        forget_password_expiry: expiresIn,
+      },
+      { new: true }
+    );
+
+    await sendEmail({
+      sendTo: email,
+      subject: "Forgot Password from Blinkit",
+      html: forgotPasswordTemplate({
+        name: user.name,
+        otp,
+      }),
+    });
+
+    return res
+      .status(200)
+      .json({ message: "an verification code send to your registed email" });
+  } catch (error) {
+    console.log(error);
+
     next(error);
   }
 };

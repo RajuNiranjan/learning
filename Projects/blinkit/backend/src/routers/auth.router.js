@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  forgetPassword,
   login,
   logout,
   signup,
@@ -22,4 +23,5 @@ authRouter.put(
   uploadAvatar
 );
 authRouter.put("/update-user", authGuard, updateUserDetails);
+authRouter.post("/forget-password", forgetPassword);
 authRouter.post("/verify-email", verifyEmail);
