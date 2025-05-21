@@ -316,3 +316,32 @@ export const verifyForgotPasswordOTP = async (req, res, next) => {
     next(error);
   }
 };
+
+export const resetPassword = async (req, res, next) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return console.log("all fields are required");
+  }
+
+  try {
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return console.log("user not found");
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await UserModel.findByIdAndUpdate(user._id, {
+      password: hashedPassword,
+      forget_password_expiry: "",
+      forget_password_otp: "",
+    });
+
+    return res.status(200).json({ message: "password updated successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};

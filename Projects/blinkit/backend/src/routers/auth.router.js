@@ -3,6 +3,7 @@ import {
   forgetPassword,
   login,
   logout,
+  resetPassword,
   signup,
   updateUserDetails,
   uploadAvatar,
@@ -27,3 +28,4 @@ authRouter.put("/update-user", authGuard, updateUserDetails);
 authRouter.post("/forget-password", forgetPassword);
 authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/verify-otp", verifyForgotPasswordOTP);
+authRouter.post("/reset-password", resetPassword);
