@@ -144,7 +144,7 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    const { userId } = req.user;
+    const { userId } = req.access_user;
     console.log("userId", userId);
 
     res.clearCookie("access_token");
@@ -169,7 +169,7 @@ export const uploadAvatar = async (req, res, next) => {
     const upload = await uploadImage(image);
 
     await UserModel.findByIdAndUpdate(
-      req.user.userId,
+      req.access_user.userId,
       { avatar: upload.secure_url },
       { new: true }
     );
@@ -182,7 +182,7 @@ export const uploadAvatar = async (req, res, next) => {
 };
 
 export const updateUserDetails = async (req, res, next) => {
-  const { userId } = req.user;
+  const { userId } = req.access_user;
   const { name, email, mobile, password } = req.body;
 
   let hashedPassword;
@@ -340,6 +340,34 @@ export const resetPassword = async (req, res, next) => {
     });
 
     return res.status(200).json({ message: "password updated successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const refreshToken = async (req, res, next) => {
+  const { userId } = req.refresh_user;
+
+  try {
+    await genAccessToken(userId, res);
+
+    return res.status(200).json({ message: "new access token generated" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const checkAuth = async (req, res, next) => {
+  const { userId } = req.access_user;
+
+  try {
+    const user = await UserModel.findById(userId).select(
+      "-password -refresh_token"
+    );
+
+    return res.status(200).json(user);
   } catch (error) {
     console.log(error);
     next(error);
