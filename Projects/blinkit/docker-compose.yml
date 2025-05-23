@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongo
+    networks:
+      - blinkit_network
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - blinkitdb:/data/db
+    networks:
+      - blinkit_network
+
+networks:
+  blinkit_network:
+
+volumes:
+  blinkitdb:
