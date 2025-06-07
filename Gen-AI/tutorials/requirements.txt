@@ -1,4 +1,14 @@
+# Core Language Model 
 openai
 langchain
 langchain_openai
+
+# Environment Configuration
 python_dotenv
+
+# Search & Knowledge Integration
+google_search_results
+wikipedia
+
+# PDF Handling
+pypdf
