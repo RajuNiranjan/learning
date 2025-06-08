@@ -2,6 +2,7 @@
 openai
 langchain
 langchain_openai
+langchain_community
 
 # Environment Configuration
 python_dotenv
@@ -12,3 +13,11 @@ wikipedia
 
 # PDF Handling
 pypdf
+
+# Hugging Face
+langchain-huggingface
+huggingface_hub
+transformers
+accelerate
+bitsandbytes
+langchain
