@@ -1,0 +1,6 @@
+MCQ,Choices,Correct_Answer
+What is the primary purpose of feature scaling in data preprocessing?,a : To increase the number of features  || b : To ensure all features contribute equally to model training  || c : To reduce the dimensionality of the dataset  || d : To eliminate outliers from the dataset ,b
+Which of the following techniques is NOT typically used for regression analysis?,a : Linear Regression  || b : Logistic Regression  || c : Ridge Regression  || d : K-Means Clustering ,d
+"In a decision tree, what metric is commonly used to determine the best split at each node?",a : Mean Squared Error  || b : Entropy  || c : Cosine Similarity  || d : F1 Score ,b
+Which of the following is a key characteristic of overfitting in machine learning models?,a : High accuracy on training data and low accuracy on test data  || b : Low variance and low bias  || c : High bias and low variance  || d : Balanced performance across training and test data ,a
+What does the term 'curse of dimensionality' refer to in data science?,a : The difficulty of visualizing high-dimensional data  || b : The exponential increase in volume associated with adding more dimensions to a dataset  || c : The ineffectiveness of algorithms in high dimensions  || d : The computational cost of processing large datasets ,b
