@@ -1,12 +1,12 @@
 {
   "1": {
-    "mcq": "multiple choice question",
+    "mcq": "What is the capital of France?",
     "options": {
-      "a": "choice",
-      "b": "choice",
-      "c": "choice",
-      "d": "choice"
+      "a": "Berlin",
+      "b": "Madrid",
+      "c": "Paris",
+      "d": "Rome"
     },
-    "correct_answer": "correct_answer"
+    "correct_option": "c"
   }
 }
