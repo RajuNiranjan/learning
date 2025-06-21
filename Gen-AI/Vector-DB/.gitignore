@@ -1,2 +1,5 @@
 .env
 .vectordb
+db
+chromedb
+chroma_db

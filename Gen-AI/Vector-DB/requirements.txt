@@ -2,6 +2,13 @@ python-dotenv
 langchain
 langchain-community
 langchain-openai
-langchain-pinecone
 tiktoken
 pypdf
+
+# PINECONE
+langchain-pinecone
+pinecone
+
+#CHROMADB
+chromadb
+langchain-chroma

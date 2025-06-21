@@ -1,0 +1,12 @@
+{
+  "1": {
+    "mcq": "What is the capital of France?",
+    "options": {
+      "a": "Berlin",
+      "b": "Madrid",
+      "c": "Paris",
+      "d": "Rome"
+    },
+    "correct_option": "c"
+  }
+}
