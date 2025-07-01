@@ -1,3 +1,8 @@
 transformers
-datasets
-tokenizers
+torch
+hf_xet
+huggingface_hub
+langchain 
+langchain-community
+langchain-huggingface
+python-dotenv
