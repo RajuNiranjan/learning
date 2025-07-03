@@ -1,4 +1,8 @@
-python-dotenv
-openai
 langchain
-langchain_openai
+langchain-openai
+openai
+python-dotenv
+tiktoken
+langchain-community
+pypdf
+faiss-cpu
