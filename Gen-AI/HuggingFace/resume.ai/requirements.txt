@@ -1,9 +1,0 @@
-langchain
-pypdf
-python-dotenv
-sentence-transformers
-transformers
-faiss-cpu
-language-tool-python
-hf_xet
-accelerate

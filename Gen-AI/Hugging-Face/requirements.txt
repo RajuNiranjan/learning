@@ -1,8 +1,4 @@
-transformers
-torch
-hf_xet
-huggingface_hub
-langchain 
+langchain
 langchain-community
 langchain-huggingface
 python-dotenv
