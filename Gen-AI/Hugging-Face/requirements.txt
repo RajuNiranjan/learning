@@ -4,3 +4,4 @@ langchain-huggingface
 python-dotenv
 sentence-transformers
 faiss-cpu
+pypdf
