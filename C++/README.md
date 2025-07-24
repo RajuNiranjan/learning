@@ -1,0 +1,1 @@
+to run any code g++ file_name.cpp -o file_name
