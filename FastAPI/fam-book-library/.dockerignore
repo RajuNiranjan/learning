@@ -1,0 +1,31 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyd
+
+# Virtual environments
+.env/
+.venv/
+.fam-todo/
+env/
+venv/
+.fam-book-library
+# Logs
+*.log
+*.sqlite3
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git files
+.git/
+.gitignore
+
+# Docker files (not needed inside image)
+Dockerfile
+docker-compose.yml
