@@ -17,5 +17,15 @@ services:
     depends_on:
       - mongo
 
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+
 volumes:
   mongo_data:
