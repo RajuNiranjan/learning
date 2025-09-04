@@ -29,7 +29,7 @@ class User(UserBase):
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        json_encoders={PyObjectId},
+        json_encoders={PyObjectId:str},
     )
 
 class UserProfile(BaseModel):
