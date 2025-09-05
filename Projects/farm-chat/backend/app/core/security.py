@@ -42,18 +42,19 @@ def verify_password(plain_password, hashed_password) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 # Verify Token 
-def verify_token(token:str, type:str = "access") -> Optional[str]:
+def verify_token(token: str, type: str = "access") -> Optional[str]:
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY.get_secret_value(), algorithms=[settings.ALGORITHM])
-        user_id = payload['sub']
-        token_type=payload['type']
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY.get_secret_value(),
+            algorithms=[settings.ALGORITHM]
+        )
+        user_id: str = payload.get("sub")
+        token_type: str = payload.get("type")
 
-        if user_id is None or token_type != token:
+        if user_id is None or token_type != type:  
             return None
         return user_id
     except JWTError:
         return None
-
-
-
