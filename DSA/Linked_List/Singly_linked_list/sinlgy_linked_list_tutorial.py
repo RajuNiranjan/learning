@@ -47,28 +47,34 @@ class LinkedList:
             n.ref = new_node
 
     def add_before(self, data, x):
-        new_node = Node(data)
-        n = self.head
-
-        if n is None:
+        if self.head is None:
             print("Linked List is Empty!")
             return
-        if n.data == x:
-            new_node.ref = n
-            n = new_node
-            return
-        
 
+        if self.head.data == x:
+            new_node = Node(data)
+            new_node.ref = self.head
+            self.head = new_node
+            return
+
+        n = self.head
         while n.ref is not None:
-            if n.ref.data ==x:
-                break
+            if n.ref.data == x:
+                new_node = Node(data)
+                new_node.ref = n.ref
+                n.ref = new_node
+                return
             n = n.ref
-        
-        if n.ref is None:
-            print(f'{x} is no in Linked List')
+
+        print(f"{x} is not in Linked List")
+
+
+    def insert_empty(self, data):
+        new_node = Node(data)
+        if self.head is None:
+            self.head = new_node
         else:
-            new_node.ref = n.ref
-            n.ref = new_node
+            print("Linked list is not empty!")
         
 
 
@@ -83,5 +89,6 @@ LL1.add_end(80)
 LL1.add_end(90)
 LL1.add_after(40, 10)
 LL1.add_before(190, 40)
+LL1.insert_empty(1)
 
 LL1.print_LL()
