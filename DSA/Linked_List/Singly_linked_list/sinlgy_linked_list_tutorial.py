@@ -85,6 +85,40 @@ class LinkedList:
         else:
             print(f'{self.head.data} removed')
             self.head = self.head.ref
+    
+    def remove_end(self):
+        if self.head is None:
+            print("Linked is Empty!")
+            return
+
+        if self.head.ref is None:
+            self.head = None
+            return
+        
+        n = self.head
+        while n.ref.ref is not None:
+            n = n.ref
+        print(f'{n.ref.data} removed')
+        n.ref = None
+
+    def remove_value(self, x):
+        if self.head is None:
+            print("linked list is Empty")
+            return
+        
+        if self.head.data == x:
+            self.head = None
+            return
+        
+        n = self.head
+        while n.ref is not None:
+            if n.ref.data == x:
+                print(f'{n.ref.data} removed')
+                n.ref = n.ref.ref
+                return
+            n = n.ref
+        
+        print(f'{x} is not found in Linked list')
 
 
 
@@ -99,6 +133,8 @@ LL1.add_end(90)
 LL1.add_after(40, 10)
 LL1.add_before(190, 40)
 LL1.insert_empty(1)
+LL1.print_LL()
 LL1.remove_begin()
-
+LL1.remove_end()
+LL1.remove_value(40)
 LL1.print_LL()
