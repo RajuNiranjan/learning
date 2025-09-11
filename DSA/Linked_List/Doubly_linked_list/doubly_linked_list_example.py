@@ -57,6 +57,53 @@ class DLL:
             n.nref = new_node
             new_node.pref = n
 
+    def add_after(self, data, x):
+        if self.head is None:
+            print("DLL is empty")
+            return
+        
+        n = self.head
+        while n is not None:
+            if n.data == x:
+                new_node = Node(data)
+                new_node.pref = n
+                new_node.nref = n.nref
+
+                if n.nref is not None:
+                    n.nref.pref = new_node
+                n.nref = new_node
+                return
+            n = n.nref
+
+        print(f"{x} is not found in DLL")
+
+        
+    def add_before(self, data, x):
+        if self.head is None:
+            print("DLL is empty")
+            return
+        
+        n = self.head
+        if n.data == x:  
+            self.add_begin(data)
+            return
+
+        while n is not None:
+            if n.data == x:
+                new_node = Node(data)
+                new_node.nref = n
+                new_node.pref = n.pref
+
+                n.pref.nref = new_node
+                n.pref = new_node
+                return
+            n = n.nref
+
+        print(f"{x} is not found in DLL")
+
+
+        
+
 
 
 
