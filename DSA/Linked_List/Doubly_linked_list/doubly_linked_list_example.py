@@ -100,6 +100,62 @@ class DLL:
             n = n.nref
 
         print(f"{x} is not found in DLL")
+    
+    def remove_begin(self):
+        if self.head is None:
+            print("DLL is empty")
+            return
+        
+        if self.head.nref is None:
+            self.head = None
+            return
+        else:
+            self.head = self.head.nref
+            self.head.prev = None
+        
+    def remove_end(self):
+        if self.head is None:
+            print("DLL is empty")
+            return
+        
+        if self.head.nref is None:
+            self.head = None
+            return
+        
+        n = self.head
+        while n.nref is not None:
+            n = n.nref
+
+        n.pref.nref = None
+        n.pref = None
+
+    def remove_value(self, x):
+        if self.head is None:
+            print("DLL is empty")
+            return
+        
+        if self.head.data == x:
+            if self.head.nref is None:
+                self.head = None
+            else:
+                self.head = self.head.nref
+                self.head.pref = None
+            return
+
+        n = self.head
+        while n is not None:
+            if n.data == x:
+
+                if n.nref is None:
+                    n.prev.nref = None
+                else:
+                    n.pref.nref = n.nref
+                    n.nref.prev = n.pref
+                return
+            n = n.nref
+        
+        print(f"{x} is not found in DLL")
+        
 
 
         
