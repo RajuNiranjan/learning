@@ -1,5 +1,5 @@
 class BST:
-    def __init__(self, key=None):     
+    def __init__(self, key=None):
         self.key = key
         self.lchild = None
         self.rchild = None
@@ -8,7 +8,6 @@ class BST:
         if self.key is None:
             self.key = data
             return
-
         if data < self.key:
             if self.lchild:
                 self.lchild.insert(data)
@@ -23,21 +22,62 @@ class BST:
     def search(self, data):
         if self.key is None:
             return False
-
         if self.key == data:
             print("Node found!")
             return True
-
         if data < self.key:
             return self.lchild.search(data) if self.lchild else False
-        else:
-            return self.rchild.search(data) if self.rchild else False
+        return self.rchild.search(data) if self.rchild else False
+
+    def preorder(self):
+        if self.key is None:
+            return []
+        result = [self.key]
+        if self.lchild:
+            result.extend(self.lchild.preorder())
+        if self.rchild:
+            result.extend(self.rchild.preorder())
+        return result
+
+    def inorder(self):
+        if self.key is None:
+            return []
+        result = []
+        if self.lchild:
+            result.extend(self.lchild.inorder())
+        result.append(self.key)
+        if self.rchild:
+            result.extend(self.rchild.inorder())
+        return result
+
+    def postorder(self):
+        if self.key is None:
+            return []
+        result = []
+        if self.lchild:
+            result.extend(self.lchild.postorder())
+        if self.rchild:
+            result.extend(self.rchild.postorder())
+        result.append(self.key)
+        return result
+
+    def pretty_tree(self, prefix="", is_left=True):
+        if self.rchild:
+            self.rchild.pretty_tree(prefix + ("|   " if is_left else "    "), False)
+        print(prefix + ("+-- " if is_left else "+-- ") + str(self.key))
+        if self.lchild:
+            self.lchild.pretty_tree(prefix + ("    " if is_left else "|   "), True)
 
 
-# ---- Usage ----
-root = BST()
-for val in [10, 5, 20, 4, 8]:
-    root.insert(val)
+if __name__ == "__main__":
+    root = BST()
+    for val in [10, 5, 20, 4, 8, 1, 6, 5]:
+        root.insert(val)
 
-print(root.search(8))   
-print(root.search(15)) 
+    print(root.search(8))
+    print(root.search(15))
+    print("Preorder :", root.preorder())
+    print("Inorder  :", root.inorder())
+    print("Postorder:", root.postorder())
+    print("\nTree Structure:")
+    root.pretty_tree()
