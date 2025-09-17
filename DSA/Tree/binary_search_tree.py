@@ -60,6 +60,35 @@ class BST:
             result.extend(self.rchild.postorder())
         result.append(self.key)
         return result
+    
+    def delete(self, data):
+        if self.key is None:
+            return
+        
+        if self.key > data:
+            if self.lchild:
+                self.lchild = self.lchild.delete(data)
+        
+        elif self.key < data:
+            if self.rchild:
+                self.rchild = self.rchild.delete(data)
+        
+        else:
+            if self.lchild is None:
+                return self.rchild
+            
+            if self.rchild is None:
+                return self.lchild
+            
+            successor = self.rchild
+            while successor.lchild:
+                successor = successor.lchild
+            
+            self.key = successor.key
+            self.rchild = self.rchild.delete(successor.key)
+        
+        return self
+                
 
     def pretty_tree(self, prefix="", is_left=True):
         if self.rchild:
@@ -71,11 +100,17 @@ class BST:
 
 if __name__ == "__main__":
     root = BST()
-    for val in [10, 5, 20, 4, 8, 1, 6, 5]:
+    for val in [100, 10, 55, 69, 200, 75, 23, 91, 155, 169]:
         root.insert(val)
 
     print(root.search(8))
     print(root.search(15))
+    print("Preorder :", root.preorder())
+    print("Inorder  :", root.inorder())
+    print("Postorder:", root.postorder())
+    print("\nTree Structure:")
+    root.pretty_tree()
+    root.delete(55)
     print("Preorder :", root.preorder())
     print("Inorder  :", root.inorder())
     print("Postorder:", root.postorder())
