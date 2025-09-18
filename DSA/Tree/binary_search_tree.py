@@ -88,6 +88,24 @@ class BST:
             self.rchild = self.rchild.delete(successor.key)
         
         return self
+
+    def height(self):
+        if self.key is None: return 0
+        l_height = self.lchild.height() if self.lchild else 0
+        r_height = self.rchild.height() if self.rchild else 0
+        return max(l_height, r_height) + 1
+    
+    def find_min(self):
+        current = self
+        while current.lchild:
+            current = current.lchild
+        return current.key
+    
+    def find_max(self):
+        current = self
+        while current.rchild:
+            current = current.rchild
+        return current.key
                 
 
     def pretty_tree(self, prefix="", is_left=True):
@@ -109,10 +127,14 @@ if __name__ == "__main__":
     print("Inorder  :", root.inorder())
     print("Postorder:", root.postorder())
     print("\nTree Structure:")
+    print('\n Tree Height', root.height())
     root.pretty_tree()
     root.delete(55)
     print("Preorder :", root.preorder())
     print("Inorder  :", root.inorder())
     print("Postorder:", root.postorder())
     print("\nTree Structure:")
+    print('\n Tree Height', root.height())
+    print('\n Min Value', root.find_min())
+    print('\n Max Value', root.find_max())
     root.pretty_tree()
