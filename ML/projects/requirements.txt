@@ -4,3 +4,5 @@ scikit-learn
 matplotlib
 seaborn
 xgboost
+streamlit
+streamlit-option-menu
