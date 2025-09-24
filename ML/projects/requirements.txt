@@ -6,3 +6,5 @@ seaborn
 xgboost
 streamlit
 streamlit-option-menu
+fastapi
+uvicorn
