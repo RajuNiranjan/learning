@@ -41,6 +41,22 @@ def DFS(node, visited=None):
             DFS(neighbor, visited)
     return visited
 
+def DFS_iterative(node):
+    visited = set()
+    if node not in graph:
+        return
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        if current not in visited:
+            print(current)
+            visited.add(current)
+            # push only neighbor nodes (not cost)
+            for (neighbor, _) in graph.get(current, []):
+                if neighbor not in visited:
+                    stack.append(neighbor)
+    return visited
+
 
 # Example usage
 add_node("A", [("B", 5), ("C", 2)])
@@ -49,5 +65,8 @@ add_node("E")
 add_edge("E", "F", 3)
 
 print("Graph:", graph)
-print("DFS from A:")
+print("\nRecursive DFS from A:")
 DFS("A")
+
+print("\nIterative DFS from A:")
+DFS_iterative("A")
