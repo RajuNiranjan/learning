@@ -11,6 +11,17 @@ def add_node(v):
         for i in range(node_count):
             temp.append(0)
         graph.append(temp)
+    
+def add_edge(v1, v2, cost):
+    if v1 not in nodes:
+        print(f'{v1} is not in Nodes')
+    elif v2 not in nodes:
+        print(f'{v2} not in nodes')
+    else:
+        idx1 = nodes.index(v1)
+        idx2 = nodes.index(v2)
+        graph[idx1][idx2] = cost
+        graph[idx2][idx1] = cost
 
 def print_graph():
     for i in range(node_count):
@@ -25,7 +36,7 @@ print(nodes)
 print(graph)
 add_node("A")
 add_node("B")
-add_node("A")
+add_edge("A","B", 5)
 print("After adding nodes")
 print(nodes)
 print(graph)
