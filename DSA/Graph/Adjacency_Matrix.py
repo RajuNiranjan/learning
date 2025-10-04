@@ -43,6 +43,18 @@ def delete_node(v):
     for i in graph:
         i.pop(idx1)
 
+def delete_edge(v1, v2):
+    if v1 not in nodes:
+        return
+    elif v2 not in nodes:
+        return
+    else:
+        idx1 = nodes.index(v1)
+        idx2 = nodes.index(v2)
+        graph[idx1][idx2] = 0
+        graph[idx2][idx1] = 0
+
+
 def print_graph():
     for i in range(node_count):
         for j in range(node_count):
@@ -59,6 +71,7 @@ add_edge("A","B", 15)
 add_edge("C","D", 25)
 add_edge("D","A", 55)
 delete_node("C")
+delete_edge("A","B")
 print("After adding nodes")
 print(nodes)
 print(graph)
