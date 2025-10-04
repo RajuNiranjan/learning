@@ -1,17 +1,22 @@
-def add_node(v):
+graph = {}
+
+def add_node(v, edges=None):
     if v not in graph:
         graph[v] = []
+    if edges:
+        for (neighbor, cost) in edges:
+            add_edge(v, neighbor, cost)
 
 def add_edge(v1, v2, cost=1):
-    if v1 not in graph or v2 not in graph:
-        return
+    if v1 not in graph:
+        add_node(v1)
+    if v2 not in graph:
+        add_node(v2)
+
     if (v2, cost) not in graph[v1]:
         graph[v1].append((v2, cost))
     if (v1, cost) not in graph[v2]:
         graph[v2].append((v1, cost))
-
-def add_weight_edge(v1, v2, cost):
-    add_edge(v1, v2, cost)
 
 def delete_edge(v1, v2):
     if v1 not in graph or v2 not in graph:
@@ -26,12 +31,23 @@ def delete_node(v):
         graph[node] = [(n, c) for (n, c) in graph[node] if n != v]
     graph.pop(v)
 
-graph = {}
-add_node("A")
-add_node("B")
-add_node("C")
-add_weight_edge("A", "B", 5)
-add_edge("A", "C")
-delete_node("C")
-delete_edge("A", "B")
-print(graph)
+def DFS(node, visited=None):
+    if visited is None:
+        visited = set()
+    if node not in visited:
+        print(node)
+        visited.add(node)
+        for (neighbor, _) in graph.get(node, []):
+            DFS(neighbor, visited)
+    return visited
+
+
+# Example usage
+add_node("A", [("B", 5), ("C", 2)])
+add_node("B", [("D", 1)])
+add_node("E")  
+add_edge("E", "F", 3)
+
+print("Graph:", graph)
+print("DFS from A:")
+DFS("A")
