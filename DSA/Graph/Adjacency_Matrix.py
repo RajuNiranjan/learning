@@ -59,6 +59,7 @@ def print_graph():
     for i in range(node_count):
         for j in range(node_count):
             print(graph[i][j], end=' ')
+        print()
 
 print("Before adding nodes")
 print(nodes)
