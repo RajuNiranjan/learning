@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+motor
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt<4.0
+python-multipart
+pydantic-settings
