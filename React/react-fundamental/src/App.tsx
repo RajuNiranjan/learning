@@ -10,6 +10,7 @@ import { UseEffect } from "./UseEffect";
 import { UseMemo } from "./components/UseMemo";
 import { UseCallBak } from "./components/UseCallBack";
 import { UseReducer } from "./components/useReducer";
+import { Counter } from "./components/Counter";
 
 const App = () => {
   const [funCount, setFunCount] = useState(0);
@@ -69,6 +70,12 @@ const App = () => {
         <h1 className="text-2xl font-bold text-center">useReducer</h1>
         <div className="grid grid-cols-2 gap-4">
           <UseReducer />
+        </div>
+      </div>{" "}
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">Context Counter</h1>
+        <div className="grid grid-cols-2 gap-4">
+          <Counter />
         </div>
       </div>
     </div>
