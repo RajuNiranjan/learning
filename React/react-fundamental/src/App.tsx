@@ -3,6 +3,8 @@ import { ClassComponent } from "./components/ClassComponent";
 import { FunctionalComponent } from "./components/FunctionalComponent";
 import { FunctionalPureComponent } from "./components/FunctionalPureComponent";
 import { ClassPureComponent } from "./components/ClassPureComponent";
+import { ControlledComponents } from "./components/ControlledComponents";
+import { UnControlledComponents } from "./components/UnControlledComponents";
 
 const App = () => {
   const [funCount, setFunCount] = useState(0);
@@ -23,6 +25,15 @@ const App = () => {
         <div className="grid grid-cols-2 gap-4">
           <ClassPureComponent count={classCount} setCount={setClassCount} />
           <FunctionalPureComponent count={funCount} setCount={setFunCount} />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">
+          Controlled / Uncontrolled Components
+        </h1>
+        <div className="grid grid-cols-2 gap-4">
+          <ControlledComponents />
+          <UnControlledComponents />
         </div>
       </div>
     </div>
