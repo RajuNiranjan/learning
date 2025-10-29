@@ -5,6 +5,11 @@ import { FunctionalPureComponent } from "./components/FunctionalPureComponent";
 import { ClassPureComponent } from "./components/ClassPureComponent";
 import { ControlledComponents } from "./components/ControlledComponents";
 import { UnControlledComponents } from "./components/UnControlledComponents";
+import UseState from "./components/UseState";
+import { UseEffect } from "./UseEffect";
+import { UseMemo } from "./components/UseMemo";
+import { UseCallBak } from "./components/UseCallBack";
+import { UseReducer } from "./components/useReducer";
 
 const App = () => {
   const [funCount, setFunCount] = useState(0);
@@ -34,6 +39,36 @@ const App = () => {
         <div className="grid grid-cols-2 gap-4">
           <ControlledComponents />
           <UnControlledComponents />
+        </div>
+      </div>{" "}
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">useState</h1>
+        <div className="grid grid-cols-2 gap-4">
+          <UseState />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">UseEffect</h1>
+        <div className="grid grid-cols-2 gap-4">
+          <UseEffect />
+        </div>
+      </div>{" "}
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">useMemo</h1>
+        <div className="grid grid-cols-2 gap-4">
+          <UseMemo />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">useCallback</h1>
+        <div className="grid grid-cols-2 gap-4">
+          <UseCallBak />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-2xl font-bold text-center">useReducer</h1>
+        <div className="grid grid-cols-2 gap-4">
+          <UseReducer />
         </div>
       </div>
     </div>
