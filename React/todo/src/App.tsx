@@ -1,10 +1,11 @@
+import { ContextTodo } from "./components/ContextTodo";
 import Todo from "./components/Todo";
 
 function App() {
   return (
     <>
-      hi
       <Todo />
+      <ContextTodo />
     </>
   );
 }
