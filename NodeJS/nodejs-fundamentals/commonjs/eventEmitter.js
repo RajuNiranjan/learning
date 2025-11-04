@@ -8,6 +8,7 @@ this.emit('greet', name);
 }
 
 const myEmitter = new MyEmitter();
+
 myEmitter.on('greet', (name) => {
 console.log(`Hi, ${name}!`);
 });
