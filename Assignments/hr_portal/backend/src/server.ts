@@ -1,1 +1,1 @@
-console.log("hello world")
+import './config/db'
