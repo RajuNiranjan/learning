@@ -1,20 +1,23 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodError, ZodObject } from "zod";
+import { ZodError, ZodTypeAny } from "zod";
 
-export const validateMiddleware = (schema: ZodObject) => {
+export const validateMiddleware = (schema: ZodTypeAny) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
       const zodError = result.error as ZodError;
-      const error = zodError.issues.map((i) => ({
-        field: i.path.join("."),
-        message: i.message,
+      const errors = zodError.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
       }));
 
-      return res.status(400).json({ message: `Validation failed ${error}` });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors,
+      });
     }
-
+    req.body = result.data;
     next();
   };
 };

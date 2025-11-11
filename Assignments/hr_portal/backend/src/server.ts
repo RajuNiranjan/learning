@@ -5,6 +5,7 @@ import { envConfig } from "./utils/env_config";
 import cors from "cors";
 import { Request, Response } from "express";
 import { authRoute } from "./routes/auth.route";
+import { employeeRoute } from "./routes/employe.route";
 
 const app = express();
 
@@ -26,7 +27,7 @@ app.get("/helth-check", (req: Request, res: Response) =>
 );
 
 app.use("/api/v1/auth", authRoute);
-
+app.use("/api/v1/employee", employeeRoute);
 app.listen(envConfig.PORT, () =>
   console.log(`server running at port no: ${envConfig.PORT}`)
 );
