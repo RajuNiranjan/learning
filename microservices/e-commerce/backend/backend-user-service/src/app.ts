@@ -1,8 +1,10 @@
 import express from "express";
-import { PORT } from "./config/env";
+import { env } from "./config/env";
 import { swaggerSpec, swaggerUiMiddleware } from "./config/swaggers";
 
 const app = express();
+
+const { PORT } = env;
 
 app.use(express.json());
 app.use(
