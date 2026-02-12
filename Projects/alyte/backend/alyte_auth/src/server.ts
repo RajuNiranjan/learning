@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { envConfig } from "./utils/envConfig";
 import { AppDataSource } from "./data-source";
+import { logger } from "./utils/logger";
 
 const app = express();
 

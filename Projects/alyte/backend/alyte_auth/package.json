@@ -6,7 +6,11 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node dist/server.js",
-    "start:dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "start:dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts",
+    "migration:up": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
+    "migration:down": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
+    "migration:create": "typeorm-ts-node-commonjs migration:create src/migrations/Migration"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +35,7 @@
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.28",
+    "winston": "^3.19.0",
     "zod": "^4.3.6"
   }
 }
